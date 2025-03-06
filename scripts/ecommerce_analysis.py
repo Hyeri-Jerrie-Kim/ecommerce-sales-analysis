@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # 🛒 E-Commerce Sales Analysis
-# 
-# This Jupyter Notebook demonstrates an **end-to-end analysis** of a real-world e-commerce dataset. It covers **data cleaning, exploratory analysis, and visualizations** using powerful Python libraries such as **Pandas, Matplotlib, Seaborn, and Plotly**.
-# 
-# In this project, I explore customer behavior, seasonal trends, and regional sales performance to uncover actionable insights. This analysis not only demonstrates my technical proficiency in handling and visualizing data but also illustrates my ability to extract meaningful business insights that can drive decision-making.
+# # 🛒 E-Commerce Sales Analysis
+# 
+# This Jupyter Notebook demonstrates an **end-to-end analysis** of a real-world e-commerce dataset. It covers **data cleaning, exploratory analysis, and visualizations** using powerful Python libraries such as **Pandas, Matplotlib, Seaborn, and Plotly**.
+# 
+# In this project, I explore customer behavior, seasonal trends, and regional sales performance to uncover actionable insights. This analysis not only demonstrates my technical proficiency in handling and visualizing data but also illustrates my ability to extract meaningful business insights that can drive decision-making.
 # 
 # 
 # ---
@@ -35,7 +35,8 @@ from wordcloud import WordCloud
 
 
 # ### **🔹 Step 2: Load and Inspect the Raw Data**
-# Let's load the dataset and perform an initial exploration to understand its structure and content..**
+# 
+Let's load the dataset and perform an initial exploration to understand its structure and content..**
 # 
 
 # In[263]:
@@ -60,9 +61,9 @@ print("\nFirst few rows of raw data:")
 print(raw_data.head())
 
 
-# ### **🔹 Step 3: Explore Data**
-# - **Check unique values in categorical columns** to understand product distribution.
-# - **Detect negative values in Quantity & UnitPrice**, which may indicate returns.
+# ### **🔹 Step 3: Explore Data**
+# - **Check unique values in categorical columns** to understand product distribution.
+# - **Detect negative values in Quantity & UnitPrice**, which may indicate returns.
 # 
 
 # In[266]:
@@ -154,9 +155,9 @@ print(incomplete_data.head())
 #   - Approximately 135,120 rows are flagged as incomplete due to missing values in key fields.  
 #   - *Action:* These rows were marked for further review.
 
-# ### **🔹 Step 2: Normalizing and Inspecting Text Data**
-# 
-# To process product descriptions consistently, we normalize text and inspect the least common entries using a WordClou.
+# ### **🔹 Step 2: Normalizing and Inspecting Text Data**
+# 
+# To process product descriptions consistently, we normalize text and inspect the least common entries using a WordClou.
 # 
 
 # In[284]:
@@ -206,9 +207,9 @@ print("\nLongest Descriptions (with InvoiceNo & StockCode):")
 print(longest_descriptions[['Description', 'InvoiceNo', 'StockCode']])
 
 
-# ### **🔹 Step 3: Removing Erroneous or Irrelevant Data**
-# 
-# We now identify and remove placeholder descriptions, very short descriptions, and cancelled transaction.
+# ### **🔹 Step 3: Removing Erroneous or Irrelevant Data**
+# 
+# We now identify and remove placeholder descriptions, very short descriptions, and cancelled transaction.
 # 
 
 # #### 📌 Identifying Placeholder Descriptions
@@ -278,7 +279,7 @@ print(f"Removed {len(cancelled_transactions)} cancelled transactions.")
 
 # Save all removed transactions for review
 dropped_transactions = pd.concat([placeholder_descriptions, short_descriptions, cancelled_transactions])
-dropped_transactions.to_csv('dropped_transactions.csv', index=False)
+dropped_transactions.to_csv('dataset/dropped_transactions.csv', index=False)
 print(f"\n{len(dropped_transactions)} transactions saved to 'dropped_transactions.csv' for further analysis.")
 
 
@@ -289,9 +290,9 @@ print(f"\n{len(dropped_transactions)} transactions saved to 'dropped_transaction
 print(f"\nRemaining transactions after cleanup: {len(clean_data)}")
 
 
-# ### **🔹 Step 4: Additional Data Cleaning**
-# 
-# We now handle duplicate transactions, negative quantities, and zero unit prices. Finally, we convert the date column for time series analysi.
+# ### **🔹 Step 4: Additional Data Cleaning**
+# 
+# We now handle duplicate transactions, negative quantities, and zero unit prices. Finally, we convert the date column for time series analysi.
 # 
 
 # In[308]:
@@ -371,13 +372,13 @@ clean_data.set_index('InvoiceDate', inplace=True)
 print("\nConverted 'InvoiceDate' to datetime format and set as index.")
 
 
-# ---
-# 
-# ## 📊 3. Data Analysis & Visualization
-# 
-# ### **🔹 Step 1: Sales Analysis by Country**
-# 
-# We calculate the total sales and visualize the top countries by ales.
+# ---
+# 
+# ## 📊 3. Data Analysis & Visualization
+# 
+# ### **🔹 Step 1: Sales Analysis by Country**
+# 
+# We calculate the total sales and visualize the top countries by ales.
 # 
 
 # In[326]:
@@ -447,9 +448,9 @@ if 'TotalSales' in clean_data.columns and 'Description' in clean_data.columns:
 # **📌 Key Insight:**
 # - focusing on the top 10 products by **TotalSales** helps in identifying best-selling items for targeted marketing an inventory optimization.
 
-# ### **🔹 Step 3: Time Series Analysis**
-# 
-# We explore yearly, monthly, and weekly sales trend.
+# ### **🔹 Step 3: Time Series Analysis**
+# 
+# We explore yearly, monthly, and weekly sales trend.
 # 
 
 # In[337]:
@@ -516,9 +517,9 @@ fig_weekly_sales.show()
 # - Sales peaked in the week of **December 12, 2010**.  
 # - Zero sales in the first week of January may indicate a data gap or store closure.
 
-# ### **🔹 Step 4: Sales by Day & Hour**
-# 
-# Next, we analyze sales by the day of the week and by the hour of the da.
+# ### **🔹 Step 4: Sales by Day & Hour**
+# 
+# Next, we analyze sales by the day of the week and by the hour of the da.
 # 
 
 # In[177]:
@@ -561,9 +562,9 @@ fig_hourly_sales.show()
 #   - Peak transaction hours are between **10 AM and 3 PM**.  
 #   - Sales drop sharply after 5 PM, aligning with standard business hours.
 
-# ### **🔹 Step 5: Distribution & Correlation Analysis**
-# 
-# Let's inspect the unit price distribution and see how key variables correlat.
+# ### **🔹 Step 5: Distribution & Correlation Analysis**
+# 
+# Let's inspect the unit price distribution and see how key variables correlat.
 # 
 
 # In[184]:
@@ -599,38 +600,38 @@ plt.show()
 # 
 # ---
 
-# ## 💡 Summary of Insights
-# 
-# ### 1. Data Quality & Cleaning
-# - **Incomplete Transactions:**  
-#   Over **135K transactions** were flagged as incomplete due to missing descriptions, zero unit prices, or missing CustomerID (common in guest checkouts). Negative values generally represent returns/refunds.
-# - **Data Cleaning Measures:**  
-#   Placeholder entries (e.g., “?”, “damages”, “samples”) and very short descriptions were removed to improve data quality. Cancelled transactions and duplicates were dropped, resulting in a refined dataset for analysis.
-# 
-# ### 2. Regional Performance & Top Products Analysis
-# - **Regional Sales Dominance:**  
-#   The **United Kingdom** leads with total sales of approximately **$8.96M**, with other notable contributions from the Netherlands, EIRE, Germany, and France.
-# - **Top Products Insight:**  
-#   Visualizations of the top 10 products by total sales highlight the best-selling items. This analysis can guide targeted marketing and inventory optimization strategies by focusing on high-performing products.
-# 
-# ### 3. Time Series & Transaction Patterns
-# - **Yearly Trends:**  
-#   Sales grow dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**. Note that 2010 data only covers December.
-# - **Monthly Trends:**  
-#   A seasonal pattern emerges with a December peak, a post-holiday dip in January, and a recovery in March.
-# - **Weekly & Daily Patterns:**  
-#   Weekly trends show a peak during the week of December 12, 2010, while day-of-week analysis indicates highest sales on Tuesday and Thursday, and the lowest on Sunday. The absence of Saturday sales suggests either store closure or data collection issues.
-# - **Hourly Trends:**  
-#   Transactions peak between **10 AM and 3 PM**, aligning with standard business hours.
-# 
-# ### 4. Correlation & Business Strategy
-# - **Key Correlations:**  
-#   A strong correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing the number of items sold has a direct impact on revenue. In contrast, **Unit Price** shows little to no correlation with Total Sales.
-# - **Strategic Implications:**  
-#   Focus on volume-based promotions, such as bundle discounts, subscription/loyalty programs, and cross-selling offers, rather than relying solely on price adjustments to drive revenue growth.
-#   
-# ---
-# 
-# **Overall, the analysis supports a strategy focused on boosting sales volume and optimizing operational efficiency. The insights across regional performance, top product identification, temporal trends, and correlation analysis provide a solid basis for targeted marketing, staffing, and inventory management decisions.** 😃
-# management decisions.** 😃
+# ## 💡 Summary of Insights
+# 
+# ### 1. Data Quality & Cleaning
+# - **Incomplete Transactions:**  
+#   Over **135K transactions** were flagged as incomplete due to missing descriptions, zero unit prices, or missing CustomerID (common in guest checkouts). Negative values generally represent returns/refunds.
+# - **Data Cleaning Measures:**  
+#   Placeholder entries (e.g., “?”, “damages”, “samples”) and very short descriptions were removed to improve data quality. Cancelled transactions and duplicates were dropped, resulting in a refined dataset for analysis.
+# 
+# ### 2. Regional Performance & Top Products Analysis
+# - **Regional Sales Dominance:**  
+#   The **United Kingdom** leads with total sales of approximately **$8.96M**, with other notable contributions from the Netherlands, EIRE, Germany, and France.
+# - **Top Products Insight:**  
+#   Visualizations of the top 10 products by total sales highlight the best-selling items. This analysis can guide targeted marketing and inventory optimization strategies by focusing on high-performing products.
+# 
+# ### 3. Time Series & Transaction Patterns
+# - **Yearly Trends:**  
+#   Sales grow dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**. Note that 2010 data only covers December.
+# - **Monthly Trends:**  
+#   A seasonal pattern emerges with a December peak, a post-holiday dip in January, and a recovery in March.
+# - **Weekly & Daily Patterns:**  
+#   Weekly trends show a peak during the week of December 12, 2010, while day-of-week analysis indicates highest sales on Tuesday and Thursday, and the lowest on Sunday. The absence of Saturday sales suggests either store closure or data collection issues.
+# - **Hourly Trends:**  
+#   Transactions peak between **10 AM and 3 PM**, aligning with standard business hours.
+# 
+# ### 4. Correlation & Business Strategy
+# - **Key Correlations:**  
+#   A strong correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing the number of items sold has a direct impact on revenue. In contrast, **Unit Price** shows little to no correlation with Total Sales.
+# - **Strategic Implications:**  
+#   Focus on volume-based promotions, such as bundle discounts, subscription/loyalty programs, and cross-selling offers, rather than relying solely on price adjustments to drive revenue growth.
+#   
+# ---
+# 
+# **Overall, the analysis supports a strategy focused on boosting sales volume and optimizing operational efficiency. The insights across regional performance, top product identification, temporal trends, and correlation analysis provide a solid basis for targeted marketing, staffing, and inventory management decisions.** 😃
+# management decisions.** 😃
 # 
