@@ -28,7 +28,7 @@ By analyzing customer behavior, seasonal sales patterns, and product demand, we 
 
 ## 📊 Dataset
 - **📍 Source:** [Kaggle](https://www.kaggle.com/datasets/carrie1/ecommerce-data)
-- **📁 File:** `ecommerce_data.csv`
+- **📁 File:** `data.csv`
 - **🔢 Total Rows:** ~541,909 transactions  
 - **🔑 Key Columns:**
   - `InvoiceNo` - Unique transaction ID  
@@ -39,7 +39,7 @@ By analyzing customer behavior, seasonal sales patterns, and product demand, we 
   - `UnitPrice` - Price per unit  
   - `CustomerID` - Unique customer identifier  
   - `Country` - Customer's country
-  - 
+   
 ### About the Dataset
 This e-commerce dataset, titled **"Online Retail"**, is sourced from the UCI Machine Learning Repository. Unlike many proprietary e-commerce datasets, this dataset is publicly available and contains actual transaction records from **December 2010 to December 2011**. The dataset comprises all transactions from a UK-based and registered non-store online retail company that mainly sells unique all-occasion gifts, with a significant number of customers being wholesalers.
 
