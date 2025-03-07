@@ -77,37 +77,43 @@ This dataset was made available by Dr. Daqing Chen, Director of the Public Analy
 ## 📊 Key Insights & Results
 
 ### 1. Regional Performance & Top Products Analysis
-- **Regional Sales Dominance:**  
-  The **United Kingdom** leads with total sales of approximately **$8.96M**, with notable contributions from the Netherlands, EIRE, Germany, and France.
-- **Top Products:**  
-  Analysis of the top 10 products by total sales highlights best-selling items, guiding targeted marketing and inventory optimization.
+- **Regional Sales Dominance:**
+  - The **United Kingdom** leads with total sales of approximately **$8.96M**.
+  - Other notable contributors include the Netherlands, EIRE, Germany, and France.
+- **Top Products:**
+  - Analysis of the top 10 products by total sales identifies the best-selling items.
+  - These products guide targeted marketing efforts and help optimize inventory management.
 
 ### 2. Time Series & Transaction Patterns
-- **Yearly Trend:**  
-  Sales surge from **December 2010 (812k)** to **December 2011 (9.77M)**. *(Note: 2010 data only covers December.)*
-- **Monthly Trend:**  
-  A clear seasonal pattern emerges: December peaks, January dips (post-holiday slowdown), followed by recovery in March.
-- **Weekly & Daily Patterns:**  
-  - **Weekly:** Sales peaked in the week of December 12, 2010.
-  - **Day-of-Week:** Tuesdays and Thursdays register the highest sales, while Sundays are the lowest. The absence of Saturday data suggests either store closures or data gaps.
-- **Hourly Trend:**  
-  Peak transactions occur between **10 AM and 3 PM**, aligning with typical business hours.
-- **Action:**  
-  Optimize promotions, schedule campaigns, and adjust operational hours based on these insights.
+- **Yearly Trends:**
+  - Sales increased dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**.
+  - *Note:* The 2010 data only covers December, emphasizing the need for monthly analysis.
+- **Monthly Trends:**
+  - A clear seasonal pattern emerges with a December peak, a January dip (post-holiday slowdown), and a recovery in March.
+- **Weekly & Daily Patterns:**
+  - **Weekly:** Sales peaked during the week of **December 12, 2010**.
+  - **Day-of-Week:** 
+    - Highest sales on **Tuesdays and Thursdays**.
+    - Lowest sales on **Sundays**; absence of Saturday data suggests potential store closures or data gaps.
+- **Hourly Trends:**
+  - Peak transactions occur between **10 AM and 3 PM**, aligning with standard business hours.
+- **Actionable Insight:**
+  - Adjust promotional campaigns, scheduling, and staffing to capitalize on these temporal trends.
 
 ### 3. Correlation & Revenue Drivers
-- **Key Correlation:**  
-  A strong positive correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing sales volume is crucial for revenue growth.
-- **Unit Price Impact:**  
-  **UnitPrice** shows little to no correlation with revenue, suggesting that merely raising prices is unlikely to drive significant gains.
-- **Action:**  
-  Focus on volume-based promotions such as bundle discounts, loyalty programs, and cross-selling strategies.
+- **Sales Volume Impact:**
+  - A strong positive correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing the number of items sold is key to boosting revenue.
+- **Price Impact:**
+  - **UnitPrice** shows little to no correlation with total revenue, suggesting that merely raising prices is not an effective strategy.
+- **Actionable Insight:**
+  - Prioritize volume-based promotions such as bundle discounts, loyalty programs, and cross-selling strategies to drive revenue growth.
 
 ### 4. Data Quality Enhancements
-- **Cleaning Efforts:**  
-  Significant measures were implemented to remove placeholder entries (e.g., “?”, “damages”, “samples”), short descriptions, cancelled transactions, and duplicates. Over 135K transactions were flagged as incomplete.
-- **Action:**  
-  Ongoing data quality monitoring is essential to maintain reliable insights.
+- **Cleaning Efforts:**
+  - Extensive data cleaning was performed by removing placeholder entries (e.g., “?”, “damages”, “samples”), short descriptions, cancelled transactions, and duplicate records.
+  - Over **135K transactions** were flagged as incomplete.
+- **Actionable Insight:**
+  - Continuous monitoring and improvement of data quality are essential to maintain reliable insights and support informed decision-making.
 
 ---
 
