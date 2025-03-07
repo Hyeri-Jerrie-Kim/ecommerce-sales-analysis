@@ -103,7 +103,7 @@ This dataset was made available by Dr. Daqing Chen, Director of the Public Analy
 - **Action:**  
   Focus on volume-based promotions such as bundle discounts, loyalty programs, and cross-selling strategies.
 
-### 4. Data Quality Enhanceme\nts
+### 4. Data Quality Enhancements
 - **Cleaning Efforts:**  
   Significant measures were implemented to remove placeholder entries (e.g., “?”, “damages”, “samples”), short descriptions, cancelled transactions, and duplicates. Over 135K transactions were flagged as incomplete.
 - **Action:**  
