@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # 🛒 E-Commerce Sales Analysis
-# 
-# This Jupyter Notebook demonstrates an **end-to-end analysis** of a real-world e-commerce dataset. It covers **data cleaning, exploratory analysis, and visualizations** using powerful Python libraries such as **Pandas, Matplotlib, Seaborn, and Plotly**.
-# 
-# In this project, I explore customer behavior, seasonal trends, and regional sales performance to uncover actionable insights. This analysis not only demonstrates my technical proficiency in handling and visualizing data but also illustrates my ability to extract meaningful business insights that can drive decision-making.
+# # 🛒 E-Commerce Sales Analysis
+# 
+# This Jupyter Notebook demonstrates an **end-to-end analysis** of a real-world e-commerce dataset. It covers **data cleaning, exploratory analysis, and visualizations** using powerful Python libraries such as **Pandas, Matplotlib, Seaborn, and Plotly**.
+# 
+# In this project, I explore customer behavior, seasonal trends, and regional sales performance to uncover actionable insights. This analysis not only demonstrates my technical proficiency in handling and visualizing data but also illustrates my ability to extract meaningful business insights that can drive decision-making.
 # 
 # 
 # ---
@@ -14,17 +14,20 @@
 # 
 # ### **🔹 Step 1: Import Required Libraries**
 
-# In[1]:
+# In[2]:
 
 
 # Install Necessary Modules
 get_ipython().system('pip install wordcloud')
 
 
-# In[260]:
+# In[3]:
 
 
 # Import Necessary Libraries
+import os
+import json
+import shutil
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -35,19 +38,18 @@ from wordcloud import WordCloud
 
 
 # ### **🔹 Step 2: Load and Inspect the Raw Data**
-# 
-Let's load the dataset and perform an initial exploration to understand its structure and content..**
+# Let's load the dataset and perform an initial exploration to understand its structure and content..**
 # 
 
-# In[263]:
+# In[5]:
 
 
 # Load Dataset
-file_path = 'dataset/ecommerce_data.csv'
+file_path = '../datasets/ecommerce_data.csv'
 raw_data = pd.read_csv(file_path, encoding='ISO-8859-1')
 
 
-# In[264]:
+# In[6]:
 
 
 # Display dataset information and basic statistics
@@ -61,12 +63,12 @@ print("\nFirst few rows of raw data:")
 print(raw_data.head())
 
 
-# ### **🔹 Step 3: Explore Data**
-# - **Check unique values in categorical columns** to understand product distribution.
-# - **Detect negative values in Quantity & UnitPrice**, which may indicate returns.
+# ### **🔹 Step 3: Explore Data**
+# - **Check unique values in categorical columns** to understand product distribution.
+# - **Detect negative values in Quantity & UnitPrice**, which may indicate returns.
 # 
 
-# In[266]:
+# In[8]:
 
 
 # Explore categorical columns: Country and Product Descriptions
@@ -74,7 +76,7 @@ print("\nNumber of unique countries:", raw_data['Country'].nunique())
 print("Number of unique products:", raw_data['Description'].nunique())
 
 
-# In[268]:
+# In[9]:
 
 
 # Summary for numerical columns 'Quantity' and 'UnitPrice'
@@ -103,7 +105,7 @@ print(raw_data[['Quantity', 'UnitPrice']].describe())
 # We start by checking for missing values and flagging incomplete rows (e.g., missing descriptions, zero prices, or missing customer IDs).
 # 
 
-# In[274]:
+# In[12]:
 
 
 # Calculate and display the percentage of missing values
@@ -112,7 +114,7 @@ print("\nPercentage of missing values in raw data:")
 print(missing_percentage)
 
 
-# In[276]:
+# In[13]:
 
 
 # Identify rows with missing 'Description'
@@ -123,7 +125,7 @@ print("\nSummary of rows with missing descriptions (for 'Quantity', 'UnitPrice',
 print(missing_description[['Quantity', 'UnitPrice', 'CustomerID']].describe())
 
 
-# In[278]:
+# In[14]:
 
 
 # Check additional patterns for missing descriptions
@@ -133,7 +135,7 @@ print("\nDistribution of 'UnitPrice' for missing descriptions:")
 print(missing_description['UnitPrice'].value_counts())
 
 
-# In[280]:
+# In[15]:
 
 
 # Flag incomplete rows (missing Description, UnitPrice == 0, or missing CustomerID)
@@ -155,12 +157,12 @@ print(incomplete_data.head())
 #   - Approximately 135,120 rows are flagged as incomplete due to missing values in key fields.  
 #   - *Action:* These rows were marked for further review.
 
-# ### **🔹 Step 2: Normalizing and Inspecting Text Data**
-# 
-# To process product descriptions consistently, we normalize text and inspect the least common entries using a WordClou.
+# ### **🔹 Step 2: Normalizing and Inspecting Text Data**
+# 
+# To process product descriptions consistently, we normalize text and inspect the least common entries using a WordClou.
 # 
 
-# In[284]:
+# In[18]:
 
 
 # Normalize 'Description' to lowercase (replace missing values with an empty string)
@@ -170,7 +172,7 @@ raw_data['NormalizedDescription'] = raw_data['Description'].fillna("").str.lower
 description_counts = raw_data['NormalizedDescription'].value_counts()
 
 
-# In[285]:
+# In[19]:
 
 
 # Display the least common descriptions in a table
@@ -182,7 +184,7 @@ print("\nLeast Common Descriptions:")
 print(tabulate(table_data, headers='keys', tablefmt='grid'))
 
 
-# In[288]:
+# In[20]:
 
 
 # Generate Word Cloud from least common descriptions for visual inspection
@@ -194,7 +196,7 @@ plt.title('Least Common Descriptions (Word Cloud)')
 plt.show()
 
 
-# In[290]:
+# In[21]:
 
 
 # Analyze description lengths to identify anomalies
@@ -207,9 +209,9 @@ print("\nLongest Descriptions (with InvoiceNo & StockCode):")
 print(longest_descriptions[['Description', 'InvoiceNo', 'StockCode']])
 
 
-# ### **🔹 Step 3: Removing Erroneous or Irrelevant Data**
-# 
-# We now identify and remove placeholder descriptions, very short descriptions, and cancelled transaction.
+# ### **🔹 Step 3: Removing Erroneous or Irrelevant Data**
+# 
+# We now identify and remove placeholder descriptions, very short descriptions, and cancelled transaction.
 # 
 
 # #### 📌 Identifying Placeholder Descriptions
@@ -232,7 +234,7 @@ print(longest_descriptions[['Description', 'InvoiceNo', 'StockCode']])
 # This ensures that any potentially unreliable or invalid product descriptions are **identified for further inspection or removal** before performing deeper analysis.
 # 
 
-# In[293]:
+# In[24]:
 
 
 # Identify placeholder descriptions using specific keywords
@@ -242,7 +244,7 @@ print("\nIdentified Placeholder Descriptions (for further inspection):")
 print(placeholder_descriptions[['InvoiceNo', 'StockCode', 'Description', 'Quantity', 'UnitPrice', 'CustomerID']])
 
 
-# In[294]:
+# In[25]:
 
 
 # Remove placeholder descriptions from the dataset
@@ -250,7 +252,7 @@ clean_data = raw_data.drop(placeholder_descriptions.index)
 print(f"\nRemoved {len(placeholder_descriptions)} placeholder descriptions.")
 
 
-# In[298]:
+# In[26]:
 
 
 # Identify and remove short descriptions (length <= 3)
@@ -261,7 +263,7 @@ clean_data = clean_data.drop(short_descriptions.index)
 print(f"Removed {len(short_descriptions)} short descriptions.")
 
 
-# In[299]:
+# In[27]:
 
 
 # Identify and remove cancelled transactions (InvoiceNo starting with 'C')
@@ -274,28 +276,28 @@ print(f"Removed {len(cancelled_transactions)} cancelled transactions.")
 
 # **📌 Note**: While duplicates were dropped to avoid overcounting, in some contexts (e.g., basket analysis) retaining duplicates might provide additional insights.
 
-# In[303]:
+# In[33]:
 
 
 # Save all removed transactions for review
 dropped_transactions = pd.concat([placeholder_descriptions, short_descriptions, cancelled_transactions])
-dropped_transactions.to_csv('dataset/dropped_transactions.csv', index=False)
+dropped_transactions.to_csv('../datasets/dropped_transactions.csv', index=False)
 print(f"\n{len(dropped_transactions)} transactions saved to 'dropped_transactions.csv' for further analysis.")
 
 
-# In[305]:
+# In[35]:
 
 
 # Verify the cleanup by checking the number of remaining transactions
 print(f"\nRemaining transactions after cleanup: {len(clean_data)}")
 
 
-# ### **🔹 Step 4: Additional Data Cleaning**
-# 
-# We now handle duplicate transactions, negative quantities, and zero unit prices. Finally, we convert the date column for time series analysi.
+# ### **🔹 Step 4: Additional Data Cleaning**
+# 
+# We now handle duplicate transactions, negative quantities, and zero unit prices. Finally, we convert the date column for time series analysi.
 # 
 
-# In[308]:
+# In[38]:
 
 
 # Detect potential duplicate transactions based on key columns
@@ -306,7 +308,7 @@ print(clean_data[duplicate_transactions])
 
 # Note: This is not exactly the duplicates that we are looking for since customers might ordered several items in one order.
 
-# In[311]:
+# In[41]:
 
 
 # Identify true duplicates by counting (InvoiceNo, StockCode) occurrences
@@ -318,7 +320,7 @@ print(true_duplicates.head(20))
 print(f"Total duplicate (InvoiceNo, StockCode) entries found: {len(true_duplicates)}")
 
 
-# In[313]:
+# In[42]:
 
 
 # Drop duplicates (keeping the first occurrence)
@@ -326,7 +328,7 @@ clean_data = clean_data.drop_duplicates(subset=['InvoiceNo', 'StockCode'], keep=
 print(f"\nRemaining transactions after dropping duplicates: {len(clean_data)}")
 
 
-# In[315]:
+# In[44]:
 
 
 # Handle Negative Quantities
@@ -336,7 +338,7 @@ print(negative_quantity_transactions.head(20))
 print(f"Total negative quantity transactions found: {len(negative_quantity_transactions)}")
 
 
-# In[317]:
+# In[47]:
 
 
 # Handle Zero Unit Price Transactions
@@ -346,7 +348,7 @@ print(zero_price_transactions.head(20))
 print(f"Total transactions with zero unit price found: {len(zero_price_transactions)}")
 
 
-# In[319]:
+# In[49]:
 
 
 # Remove zero-price transactions from the dataset
@@ -354,7 +356,7 @@ clean_data = clean_data[clean_data['UnitPrice'] > 0]
 print(f"\nRemaining transactions after removing zero-price transactions: {len(clean_data)}")
 
 
-# In[321]:
+# In[51]:
 
 
 # Check for missing or incorrect country names
@@ -363,7 +365,7 @@ print("Missing country values count:", clean_data['Country'].isnull().sum())
 print("Unique country names:", clean_data['Country'].unique())
 
 
-# In[323]:
+# In[53]:
 
 
 # Convert 'InvoiceDate' to datetime format and set as index for time-series analysis
@@ -372,23 +374,35 @@ clean_data.set_index('InvoiceDate', inplace=True)
 print("\nConverted 'InvoiceDate' to datetime format and set as index.")
 
 
-# ---
-# 
-# ## 📊 3. Data Analysis & Visualization
-# 
-# ### **🔹 Step 1: Sales Analysis by Country**
-# 
-# We calculate the total sales and visualize the top countries by ales.
+# In[57]:
+
+
+# Define the output file path
+cleaned_file_path = "../datasets/cleaned_ecommerce_data.csv"
+
+# Save the cleaned data
+clean_data.to_csv(cleaned_file_path, index=False, encoding="utf-8")
+
+print(f" Cleaned dataset saved successfully: {cleaned_file_path}")
+
+
+# ---
+# 
+# ## 📊 3. Data Analysis & Visualization
+# 
+# ### **🔹 Step 1: Sales Analysis by Country**
+# 
+# We calculate the total sales and visualize the top countries by ales.
 # 
 
-# In[326]:
+# In[60]:
 
 
 # Aggregate Total Sales by Country
 clean_data['TotalSales'] = clean_data['Quantity'] * clean_data['UnitPrice']
 
 
-# In[328]:
+# In[62]:
 
 
 # Aggregate Total Sales by Country and sort descending
@@ -398,7 +412,7 @@ print("\nTotal Sales by Country (Top 10):")
 print(country_sales.head(10))
 
 
-# In[330]:
+# In[64]:
 
 
 # Create a bar plot for Total Sales by Country
@@ -422,7 +436,7 @@ fig_country_sales.show()
 
 # ### **🔹 Step 2: Top 10 Products by Total Sales**
 
-# In[346]:
+# In[68]:
 
 
 # Top 10 Products by Total Sales 
@@ -448,12 +462,12 @@ if 'TotalSales' in clean_data.columns and 'Description' in clean_data.columns:
 # **📌 Key Insight:**
 # - focusing on the top 10 products by **TotalSales** helps in identifying best-selling items for targeted marketing an inventory optimization.
 
-# ### **🔹 Step 3: Time Series Analysis**
-# 
-# We explore yearly, monthly, and weekly sales trend.
+# ### **🔹 Step 3: Time Series Analysis**
+# 
+# We explore yearly, monthly, and weekly sales trend.
 # 
 
-# In[337]:
+# In[72]:
 
 
 # Yearly Sales Trend using resampling
@@ -468,7 +482,7 @@ print(yearly_sales)
 #     
 # In order to understand trends, we should compare month-to-month growth within 2011.
 
-# In[340]:
+# In[75]:
 
 
 # Analyze Monthly Sales Trend
@@ -499,7 +513,7 @@ fig_monthly_sales.show()
 # - March 2011 (713k) had a sales recovery, suggesting a potential seasonal trend
 # - *Seasonal Insight:* **Holiday demand** significantly boosts December sales.
 
-# In[173]:
+# In[78]:
 
 
 # Analyze Weekly Sales Trend
@@ -517,12 +531,12 @@ fig_weekly_sales.show()
 # - Sales peaked in the week of **December 12, 2010**.  
 # - Zero sales in the first week of January may indicate a data gap or store closure.
 
-# ### **🔹 Step 4: Sales by Day & Hour**
-# 
-# Next, we analyze sales by the day of the week and by the hour of the da.
+# ### **🔹 Step 4: Sales by Day & Hour**
+# 
+# Next, we analyze sales by the day of the week and by the hour of the da.
 # 
 
-# In[177]:
+# In[82]:
 
 
 # Sales by Day of the Week
@@ -543,7 +557,7 @@ fig_daywise_sales.show()
 # - **Sunday** shows the lowest sales (~797k).  
 # - *Observation:* The absence of Saturday sales (NaN) suggests no transactions—possibly due to store closure or data collection issues.
 
-# In[180]:
+# In[85]:
 
 
 # Sales by Hour of the Day
@@ -562,12 +576,12 @@ fig_hourly_sales.show()
 #   - Peak transaction hours are between **10 AM and 3 PM**.  
 #   - Sales drop sharply after 5 PM, aligning with standard business hours.
 
-# ### **🔹 Step 5: Distribution & Correlation Analysis**
-# 
-# Let's inspect the unit price distribution and see how key variables correlat.
+# ### **🔹 Step 5: Distribution & Correlation Analysis**
+# 
+# Let's inspect the unit price distribution and see how key variables correlat.
 # 
 
-# In[184]:
+# In[89]:
 
 
 # Unit Price Distribution using Seaborn
@@ -577,7 +591,7 @@ plt.title('Unit Price Distribution')
 plt.show()
 
 
-# In[186]:
+# In[91]:
 
 
 # Correlation Heatmap for key variables
@@ -600,38 +614,59 @@ plt.show()
 # 
 # ---
 
-# ## 💡 Summary of Insights
-# 
-# ### 1. Data Quality & Cleaning
-# - **Incomplete Transactions:**  
-#   Over **135K transactions** were flagged as incomplete due to missing descriptions, zero unit prices, or missing CustomerID (common in guest checkouts). Negative values generally represent returns/refunds.
-# - **Data Cleaning Measures:**  
-#   Placeholder entries (e.g., “?”, “damages”, “samples”) and very short descriptions were removed to improve data quality. Cancelled transactions and duplicates were dropped, resulting in a refined dataset for analysis.
-# 
-# ### 2. Regional Performance & Top Products Analysis
-# - **Regional Sales Dominance:**  
-#   The **United Kingdom** leads with total sales of approximately **$8.96M**, with other notable contributions from the Netherlands, EIRE, Germany, and France.
-# - **Top Products Insight:**  
-#   Visualizations of the top 10 products by total sales highlight the best-selling items. This analysis can guide targeted marketing and inventory optimization strategies by focusing on high-performing products.
-# 
-# ### 3. Time Series & Transaction Patterns
-# - **Yearly Trends:**  
-#   Sales grow dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**. Note that 2010 data only covers December.
-# - **Monthly Trends:**  
-#   A seasonal pattern emerges with a December peak, a post-holiday dip in January, and a recovery in March.
-# - **Weekly & Daily Patterns:**  
-#   Weekly trends show a peak during the week of December 12, 2010, while day-of-week analysis indicates highest sales on Tuesday and Thursday, and the lowest on Sunday. The absence of Saturday sales suggests either store closure or data collection issues.
-# - **Hourly Trends:**  
-#   Transactions peak between **10 AM and 3 PM**, aligning with standard business hours.
-# 
-# ### 4. Correlation & Business Strategy
-# - **Key Correlations:**  
-#   A strong correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing the number of items sold has a direct impact on revenue. In contrast, **Unit Price** shows little to no correlation with Total Sales.
-# - **Strategic Implications:**  
-#   Focus on volume-based promotions, such as bundle discounts, subscription/loyalty programs, and cross-selling offers, rather than relying solely on price adjustments to drive revenue growth.
-#   
-# ---
-# 
-# **Overall, the analysis supports a strategy focused on boosting sales volume and optimizing operational efficiency. The insights across regional performance, top product identification, temporal trends, and correlation analysis provide a solid basis for targeted marketing, staffing, and inventory management decisions.** 😃
-# management decisions.** 😃
+# ## Save & Convert Notebook to Python Script
+# To ensure that our Jupyter Notebook (`.ipynb`) is always synchronized with a Python script (`.py`), we will **automatically convert** the notebook to a Python script at the end of execution. This ensures consistency when pushing updates to GitHub.
+
+# In[100]:
+
+
+# Define notebook and script filenames
+notebook_name = "ecommerce_analysis.ipynb"  # Update this if the notebook name changes
+script_name = "ecommerce_analysis.py"
+
+# Convert the Jupyter Notebook to a Python script
+get_ipython().system(f'jupyter nbconvert --to script {notebook_name}')
+
+# Move the Python script to the 'scripts' folder
+destination_path = f"../scripts/{script_name}"
+shutil.move(script_name, destination_path)
+
+# Print confirmation message
+print(f" Notebook '{notebook_name}' successfully converted and saved as '{destination_path}'")
+
+
+# ## 💡 Summary of Insights
+# 
+# ### 1. Data Quality & Cleaning
+# - **Incomplete Transactions:**  
+#   Over **135K transactions** were flagged as incomplete due to missing descriptions, zero unit prices, or missing CustomerID (common in guest checkouts). Negative values generally represent returns/refunds.
+# - **Data Cleaning Measures:**  
+#   Placeholder entries (e.g., “?”, “damages”, “samples”) and very short descriptions were removed to improve data quality. Cancelled transactions and duplicates were dropped, resulting in a refined dataset for analysis.
+# 
+# ### 2. Regional Performance & Top Products Analysis
+# - **Regional Sales Dominance:**  
+#   The **United Kingdom** leads with total sales of approximately **$8.96M**, with other notable contributions from the Netherlands, EIRE, Germany, and France.
+# - **Top Products Insight:**  
+#   Visualizations of the top 10 products by total sales highlight the best-selling items. This analysis can guide targeted marketing and inventory optimization strategies by focusing on high-performing products.
+# 
+# ### 3. Time Series & Transaction Patterns
+# - **Yearly Trends:**  
+#   Sales grow dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**. Note that 2010 data only covers December.
+# - **Monthly Trends:**  
+#   A seasonal pattern emerges with a December peak, a post-holiday dip in January, and a recovery in March.
+# - **Weekly & Daily Patterns:**  
+#   Weekly trends show a peak during the week of December 12, 2010, while day-of-week analysis indicates highest sales on Tuesday and Thursday, and the lowest on Sunday. The absence of Saturday sales suggests either store closure or data collection issues.
+# - **Hourly Trends:**  
+#   Transactions peak between **10 AM and 3 PM**, aligning with standard business hours.
+# 
+# ### 4. Correlation & Business Strategy
+# - **Key Correlations:**  
+#   A strong correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing the number of items sold has a direct impact on revenue. In contrast, **Unit Price** shows little to no correlation with Total Sales.
+# - **Strategic Implications:**  
+#   Focus on volume-based promotions, such as bundle discounts, subscription/loyalty programs, and cross-selling offers, rather than relying solely on price adjustments to drive revenue growth.
+#   
+# ---
+# 
+# **Overall, the analysis supports a strategy focused on boosting sales volume and optimizing operational efficiency. The insights across regional performance, top product identification, temporal trends, and correlation analysis provide a solid basis for targeted marketing, staffing, and inventory management decisions.** 😃
+# management decisions.** 😃
 # 
