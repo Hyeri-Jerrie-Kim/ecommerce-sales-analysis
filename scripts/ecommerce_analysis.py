@@ -276,7 +276,7 @@ print(f"Removed {len(cancelled_transactions)} cancelled transactions.")
 
 # **📌 Note**: While duplicates were dropped to avoid overcounting, in some contexts (e.g., basket analysis) retaining duplicates might provide additional insights.
 
-# In[33]:
+# In[29]:
 
 
 # Save all removed transactions for review
@@ -285,7 +285,7 @@ dropped_transactions.to_csv('../datasets/dropped_transactions.csv', index=False)
 print(f"\n{len(dropped_transactions)} transactions saved to 'dropped_transactions.csv' for further analysis.")
 
 
-# In[35]:
+# In[30]:
 
 
 # Verify the cleanup by checking the number of remaining transactions
@@ -297,7 +297,7 @@ print(f"\nRemaining transactions after cleanup: {len(clean_data)}")
 # We now handle duplicate transactions, negative quantities, and zero unit prices. Finally, we convert the date column for time series analysi.
 # 
 
-# In[38]:
+# In[32]:
 
 
 # Detect potential duplicate transactions based on key columns
@@ -308,7 +308,7 @@ print(clean_data[duplicate_transactions])
 
 # Note: This is not exactly the duplicates that we are looking for since customers might ordered several items in one order.
 
-# In[41]:
+# In[34]:
 
 
 # Identify true duplicates by counting (InvoiceNo, StockCode) occurrences
@@ -320,7 +320,7 @@ print(true_duplicates.head(20))
 print(f"Total duplicate (InvoiceNo, StockCode) entries found: {len(true_duplicates)}")
 
 
-# In[42]:
+# In[35]:
 
 
 # Drop duplicates (keeping the first occurrence)
@@ -328,7 +328,7 @@ clean_data = clean_data.drop_duplicates(subset=['InvoiceNo', 'StockCode'], keep=
 print(f"\nRemaining transactions after dropping duplicates: {len(clean_data)}")
 
 
-# In[44]:
+# In[36]:
 
 
 # Handle Negative Quantities
@@ -338,7 +338,7 @@ print(negative_quantity_transactions.head(20))
 print(f"Total negative quantity transactions found: {len(negative_quantity_transactions)}")
 
 
-# In[47]:
+# In[37]:
 
 
 # Handle Zero Unit Price Transactions
@@ -348,7 +348,7 @@ print(zero_price_transactions.head(20))
 print(f"Total transactions with zero unit price found: {len(zero_price_transactions)}")
 
 
-# In[49]:
+# In[38]:
 
 
 # Remove zero-price transactions from the dataset
@@ -356,7 +356,7 @@ clean_data = clean_data[clean_data['UnitPrice'] > 0]
 print(f"\nRemaining transactions after removing zero-price transactions: {len(clean_data)}")
 
 
-# In[51]:
+# In[39]:
 
 
 # Check for missing or incorrect country names
@@ -365,7 +365,7 @@ print("Missing country values count:", clean_data['Country'].isnull().sum())
 print("Unique country names:", clean_data['Country'].unique())
 
 
-# In[53]:
+# In[40]:
 
 
 # Convert 'InvoiceDate' to datetime format and set as index for time-series analysis
@@ -374,7 +374,7 @@ clean_data.set_index('InvoiceDate', inplace=True)
 print("\nConverted 'InvoiceDate' to datetime format and set as index.")
 
 
-# In[57]:
+# In[41]:
 
 
 # Define the output file path
@@ -395,14 +395,14 @@ print(f" Cleaned dataset saved successfully: {cleaned_file_path}")
 # We calculate the total sales and visualize the top countries by ales.
 # 
 
-# In[60]:
+# In[43]:
 
 
 # Aggregate Total Sales by Country
 clean_data['TotalSales'] = clean_data['Quantity'] * clean_data['UnitPrice']
 
 
-# In[62]:
+# In[44]:
 
 
 # Aggregate Total Sales by Country and sort descending
@@ -412,7 +412,7 @@ print("\nTotal Sales by Country (Top 10):")
 print(country_sales.head(10))
 
 
-# In[64]:
+# In[45]:
 
 
 # Create a bar plot for Total Sales by Country
@@ -436,7 +436,7 @@ fig_country_sales.show()
 
 # ### **🔹 Step 2: Top 10 Products by Total Sales**
 
-# In[68]:
+# In[48]:
 
 
 # Top 10 Products by Total Sales 
@@ -467,7 +467,7 @@ if 'TotalSales' in clean_data.columns and 'Description' in clean_data.columns:
 # We explore yearly, monthly, and weekly sales trend.
 # 
 
-# In[72]:
+# In[51]:
 
 
 # Yearly Sales Trend using resampling
@@ -482,7 +482,7 @@ print(yearly_sales)
 #     
 # In order to understand trends, we should compare month-to-month growth within 2011.
 
-# In[75]:
+# In[53]:
 
 
 # Analyze Monthly Sales Trend
@@ -513,7 +513,7 @@ fig_monthly_sales.show()
 # - March 2011 (713k) had a sales recovery, suggesting a potential seasonal trend
 # - *Seasonal Insight:* **Holiday demand** significantly boosts December sales.
 
-# In[78]:
+# In[55]:
 
 
 # Analyze Weekly Sales Trend
@@ -536,7 +536,7 @@ fig_weekly_sales.show()
 # Next, we analyze sales by the day of the week and by the hour of the da.
 # 
 
-# In[82]:
+# In[58]:
 
 
 # Sales by Day of the Week
@@ -557,7 +557,7 @@ fig_daywise_sales.show()
 # - **Sunday** shows the lowest sales (~797k).  
 # - *Observation:* The absence of Saturday sales (NaN) suggests no transactions—possibly due to store closure or data collection issues.
 
-# In[85]:
+# In[60]:
 
 
 # Sales by Hour of the Day
@@ -581,7 +581,7 @@ fig_hourly_sales.show()
 # Let's inspect the unit price distribution and see how key variables correlat.
 # 
 
-# In[89]:
+# In[63]:
 
 
 # Unit Price Distribution using Seaborn
@@ -591,7 +591,7 @@ plt.title('Unit Price Distribution')
 plt.show()
 
 
-# In[91]:
+# In[64]:
 
 
 # Correlation Heatmap for key variables
@@ -617,7 +617,7 @@ plt.show()
 # ## Save & Convert Notebook to Python Script
 # To ensure that our Jupyter Notebook (`.ipynb`) is always synchronized with a Python script (`.py`), we will **automatically convert** the notebook to a Python script at the end of execution. This ensures consistency when pushing updates to GitHub.
 
-# In[100]:
+# In[67]:
 
 
 # Define notebook and script filenames
@@ -635,6 +635,26 @@ shutil.move(script_name, destination_path)
 print(f" Notebook '{notebook_name}' successfully converted and saved as '{destination_path}'")
 
 
+# ## 🛠️ Restoring `InvoiceDate` as a Column
+# 
+# ### 📌 Why Reset `InvoiceDate`?
+# During the data analysis process, `InvoiceDate` was set as an **index** for easier time-series analysis. However, in Power BI, we need `InvoiceDate` as a **regular column** to create visualizations based on time (e.g., Monthly & Weekly Sales Trend as a column.")
+# 
+
+# In[115]:
+
+
+# Reset the index to restore 'InvoiceDate' as a column
+clean_data.reset_index(inplace=True)
+
+# Save the cleaned dataset again
+clean_data.to_csv("../datasets/cleaned_ecommerce_data.csv", index=False, encoding="utf-8")
+
+print("Cleaned dataset saved with 'InvoiceDate' as a column.")
+
+
+# ---
+# 
 # ## 💡 Summary of Insights
 # 
 # ### 1. Data Quality & Cleaning
@@ -670,3 +690,9 @@ print(f" Notebook '{notebook_name}' successfully converted and saved as '{destin
 # **Overall, the analysis supports a strategy focused on boosting sales volume and optimizing operational efficiency. The insights across regional performance, top product identification, temporal trends, and correlation analysis provide a solid basis for targeted marketing, staffing, and inventory management decisions.** 😃
 # management decisions.** 😃
 # 
+
+# In[ ]:
+
+
+
+
