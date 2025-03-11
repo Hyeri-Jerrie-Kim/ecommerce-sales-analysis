@@ -117,13 +117,24 @@ This dataset was made available by Dr. Daqing Chen, Director of the Public Analy
 
 ---
 
+## 📊 Power BI Dashboard
+This project includes an interactive **Power BI dashboard** for analyzing e-commerce sales.
+
+📂 **Files in `/powerbi/` folder**:
+- **`ecommerce_dashboard.pbix`** → Full Power BI dashboard.
+- **`ecommerce_dashboard.pdf`** → Static version (exported PDF).
+
+### 🛠 How to Open
+1. Download **Power BI Desktop** ([Download Here](https://powerbi.microsoft.com/en-us/downloads/)).
+2. Open the `.pbix` file in Power BI.
+
+---
+
 ## 📜 Future Improvements
 - 🏷 **Customer Segmentation:**  
   Apply clustering techniques (e.g., K-Means) to identify distinct customer groups.
 - 📉 **Predictive Modeling:**  
   Develop forecasting models to predict future sales trends.
-- 📊 **Dashboard Creation:**  
-  Build dynamic dashboards using Tableau, Power BI, or Plotly Dash for real-time insights.
 - 🔄 **Automation:**  
   Enhance data ingestion and analysis workflows with automated Python scripts. 
 
