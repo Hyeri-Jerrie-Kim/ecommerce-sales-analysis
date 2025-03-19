@@ -1,6 +1,6 @@
 # 📊 E-Commerce Sales Analysis
 
-📌 **Author:** Hyeri Kim
+📌 **Author:** Hyeri Kim </br>
 📅 **Last Updated:** March 2025  
 📂 **Category:** Data Analysis, EDA, Business Intelligence  
 🗂 **Dataset:** [E-commerce Sales Data](https://www.kaggle.com/datasets/carrie1/ecommerce-data)  
@@ -9,26 +9,25 @@
 
 ## 📖 Project Overview
 
-This project explores **e-commerce sales transactions** to uncover key trends and business insights.  
-By analyzing customer behavior, seasonal sales patterns, and product demand, we extract **actionable insights** to drive data-driven decisions.
+Conducted an **e-commerce sales analysis** on **541,909 transactions**, refining the dataset to **519,580 valid records** through data cleaning and preprocessing. By leveraging **time-series visualizations** and **correlation analysis**, I identified **quantity sold** as the key revenue driver—surpassing price adjustments in influencing total sales.
 
 ---
 
 ## 📌 Key Features
 - 🔍 **Data Cleaning:**  
-  Handling missing values, duplicates, incomplete transactions, and outliers to ensure data quality.
+  Handled missing values, duplicates, incomplete transactions, and outliers to ensure data quality.
 - 📊 **Interactive Visualizations:**  
-  Dynamic charts and graphs using Matplotlib, Seaborn, and Plotly to explore sales trends and performance.
+  Created dynamic charts using Matplotlib, Seaborn, and Plotly to explore trends and performance.
 - 🎯 **Business Insights:**  
-  In-depth analysis of customer trends, revenue patterns, and seasonal sales to inform strategic decisions.
+  Derived in-depth analysis of customer behavior, seasonal sales patterns, and product demand.
 - 🕒 **Time Series Analysis:**  
-  Detailed examination of yearly, monthly, weekly, daily, and hourly sales trends.
+  Examined yearly, monthly, weekly, daily, and hourly trends to uncover peak seasons and high-traffic hours.
 
 ---
 
 ## 📊 Dataset
 - **📍 Source:** [Kaggle](https://www.kaggle.com/datasets/carrie1/ecommerce-data)
-- **📁 File:** `data.csv`
+- **📁 File:** `ecommerce_data.csv`
 - **🔢 Total Rows:** ~541,909 transactions  
 - **🔑 Key Columns:**
   - `InvoiceNo` - Unique transaction ID  
@@ -76,25 +75,31 @@ This dataset was made available by Dr. Daqing Chen, Director of the Public Analy
 
 ## 📊 Key Insights & Results
 
-### 1. Regional Performance & Top Products Analysis
+### 1. Core Findings
+- **Quantity Sold as Revenue Driver:**
+  Identified **quantity sold**—not price—as the primary factor influencing total sales.</br>
+  🔸 **Action:** Implement volume-based promotions and loyalty programs to boost sales.
+- **Peak Seasonal Demand:**
+  Notable sales surge in **November and December**, aligning with holiday shopping.</br>
+  🔸 **Action:** Optimize inventory and marketing strategies for Q4 demand.
+- **High-Traffic Hours (10 AM–3 PM):**
+  Most sales occur during this window.</br>
+  🔸 **Action:** Schedule ads and promotions to capitalize on peak traffic.
+
+### 2. Regional Performance & Products Analysis
 - **Regional Sales Dominance:**
-  - The **United Kingdom** leads with total sales of approximately **$8.96M**.
-  - Other notable contributors include the Netherlands, EIRE, Germany, and France.
+  The **United Kingdom** leads with total sales of approximately **$8.96M**, followed by the Netherlands, EIRE, Germany, and France.
 - **Top Products:**
   - Analysis of the top 10 products by total sales identifies the best-selling items.
   - These products guide targeted marketing efforts and help optimize inventory management.
 
-### 2. Time Series & Transaction Patterns
-- **Yearly Trends:**
-  - Sales increased dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**.
-  - *Note:* The 2010 data only covers December, emphasizing the need for monthly analysis.
-- **Monthly Trends:**
-  - A clear seasonal pattern emerges with a December peak, a January dip (post-holiday slowdown), and a recovery in March.
+### 3. Time Series & Transaction Patterns
+- **Yearly & Monthly Trends:**
+  Sales surge from December 2010 (812k) to December 2011 (9.77M). December peaks, January dips, and March recovers.
 - **Weekly & Daily Patterns:**
-  - **Weekly:** Sales peaked during the week of **December 12, 2010**.
-  - **Day-of-Week:** 
-    - Highest sales on **Tuesdays and Thursdays**.
-    - Lowest sales on **Sundays**; absence of Saturday data suggests potential store closures or data gaps.
+  - Peak week: **December 12, 2010**
+  - Highest day-of-week sales: **Tuesdays and Thursdays**
+  - Lowest day-of-week sales: **Sundays**; no Saturday data suggests closures or gaps.
 - **Hourly Trends:**
   - Peak transactions occur between **10 AM and 3 PM**, aligning with standard business hours.
 - **Actionable Insight:**
@@ -110,10 +115,9 @@ This dataset was made available by Dr. Daqing Chen, Director of the Public Analy
 
 ### 4. Data Quality Enhancements
 - **Cleaning Efforts:**
-  - Extensive data cleaning was performed by removing placeholder entries (e.g., “?”, “damages”, “samples”), short descriptions, cancelled transactions, and duplicate records.
-  - Over **135K transactions** were flagged as incomplete.
+  Removed placeholder entries (e.g., “?”, “damages”), short descriptions, cancelled transactions, and duplicates. Over **135K** incomplete transactions flagged.
 - **Actionable Insight:**
-  - Continuous monitoring and improvement of data quality are essential to maintain reliable insights and support informed decision-making.
+  Ongoing data quality monitoring ensures reliable insights and informed decisions.
 
 ---
 
