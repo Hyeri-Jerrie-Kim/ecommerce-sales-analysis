@@ -1,698 +1,1236 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # 🛒 E-Commerce Sales Analysis
-# 
-# This Jupyter Notebook demonstrates an **end-to-end analysis** of a real-world e-commerce dataset. It covers **data cleaning, exploratory analysis, and visualizations** using powerful Python libraries such as **Pandas, Matplotlib, Seaborn, and Plotly**.
-# 
-# In this project, I explore customer behavior, seasonal trends, and regional sales performance to uncover actionable insights. This analysis not only demonstrates my technical proficiency in handling and visualizing data but also illustrates my ability to extract meaningful business insights that can drive decision-making.
+# # 🛒 E-Commerce Sales Analysis
 # 
+# ## Project Objective
 # 
+# This project aims to uncover actionable insights from historical e-commerce transactions and explore customer and product-level behaviors. In addition to exploratory data analysis (EDA), we extend the analysis with segmentation and product-level patterns to support data-driven business strategies.
+# 
+# ### Key Strategic Questions:
+# - Which product categories and stock codes drive the most revenue?
+# - Are there temporal patterns in purchasing behavior (hour, day, month)?
+# - How can customers be segmented based on their purchase behavior?
+# - What sales strategies can be derived from customer and product trends?
 # ---
 # 
-# ## 📥 1. Load Dataset & Initial Exploration
+# ## 1. Load & Clean the Dataset
 # 
-# ### **🔹 Step 1: Import Required Libraries**
+# This step establishes the foundation of our analysis. We begin by loading the raw dataset and investigating its structure, completeness, and business logic. Based on data patterns, we apply cleaning strategies that preserve valuable information and ensure analytical integrity.
+# 
+# ### 1.1 Load and Preview the Dataset
+# 
+# We import necessary libraries and load the dataset. Initial inspection will give us a high-level understanding of the dataset's shape and structure.
+
+# In[1]:
+
+
+# Import Required Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import warnings
+
+# Suppress warnings for cleaner output
+warnings.filterwarnings('ignore')
+
+# Load Dataset
+df = pd.read_csv('../datasets/ecommerce_data.csv', encoding='ISO-8859-1')
+
+# Display basic information
+df.info()
+df.head()
+
+
+# ### 1.2 Investigate Missing and Incomplete Data
+# 
+# We quantify missing values and explore their significance. This helps us form a plan for handling incomplete records.
 
 # In[2]:
 
 
-# Install Necessary Modules
-get_ipython().system('pip install wordcloud')
+# Check number of missing values in each column
+missing_summary = df.isnull().sum().sort_values(ascending=False)
+print("Missing summary:\n")
+print(missing_summary)
+
+# Check proportion of missing values
+missing_ratio = df.isnull().mean().round(4) * 100
+print("\nMissing ratio:\n")
+print(missing_ratio.sort_values(ascending=False))
 
 
 # In[3]:
 
 
-# Import Necessary Libraries
-import os
-import json
-import shutil
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.express as px
-from tabulate import tabulate
-from wordcloud import WordCloud
+# Investigate what kind of products are being purchased without CustomerID
+guest_product_stats = (
+    df[df['CustomerID'].isnull()]
+    .groupby('Description')['Quantity']
+    .sum()
+    .sort_values(ascending=False)
+)
+print("\nProducts purchased by guest:\n")
+print(guest_product_stats.head(10))
 
 
-# ### **🔹 Step 2: Load and Inspect the Raw Data**
-# Let's load the dataset and perform an initial exploration to understand its structure and content..**
+# - Approximately **25%** of transactions are missing `CustomerID`, indicating guest purchases.
+# - Only 0.27% of rows have missing `Description`, suggesting low impact but still worth reviewing.
+# - Products purchased by guests include top-selling items.
+
+# ### 1.3 Identify Cancellable and Business-Relevant Transactions
 # 
+# We check whether missing descriptions are recoverable using `StockCode`, and validate if 'C'-prefixed invoices signify cancellations.
+
+# In[4]:
+
+
+# Identify StockCodes with missing Description
+null_desc_codes = df[df['Description'].isnull()]['StockCode'].value_counts()
+
+# Check if these StockCodes also appear elsewhere with valid descriptions
+valid_code_set = set()
+for code in null_desc_codes.index:
+    descs = df[df['StockCode'] == code]['Description'].dropna().unique()
+    if len(descs) >= 3:
+        valid_code_set.add(code)
+print(valid_code_set)
+print("Number of valid codes:", len(valid_code_set))
+
+
+# - We identified 52 `StockCode`s StockCodes with recoverable descriptions.
 
 # In[5]:
 
 
-# Load Dataset
-file_path = '../datasets/ecommerce_data.csv'
-raw_data = pd.read_csv(file_path, encoding='ISO-8859-1')
+# Examine transactions where InvoiceNo starts with 'C'
+cancelled_df = df[df['InvoiceNo'].astype(str).str.startswith('C')]
 
+# Review most common descriptions in cancelled transactions
+print(cancelled_df['Description'].value_counts().head(10), "\n")
+
+# Review quantity statistics for these transactions
+print(cancelled_df['Quantity'].describe())
+
+
+# Rows with `InvoiceNo` starting with `'C'` exhibit the following:
+# 
+# - Quantity: All values are negative, with a median of `-2` and a minimum of `-80995`, confirming they are reversal or return entries.
+# 
+# - Descriptions: The most frequent entries include generic or administrative items such as `'Manual'`, `'POSTAGE'`, and `'Discount'`, which are unlikely to represent new sales.   
+# → This validates that `'C'-prefixed` transactions should be excluded from analysis as **they represent cancellations or corrections**.
+
+# ### 1.4 Apply Data-Driven Cleaning Strategy
+# 
+# Based on our findings, we apply thoughtful cleaning that preserves data integrity and business value.
 
 # In[6]:
 
 
-# Display dataset information and basic statistics
-print("Raw Data Information:")
-raw_data.info()
+# Create a working copy
+df_clean = df.copy()
 
-print("\nDescriptive Statistics:")
-print(raw_data.describe())
+# Convert InvoiceDate to datetime format
+df_clean['InvoiceDate'] = pd.to_datetime(df_clean['InvoiceDate'])
 
-print("\nFirst few rows of raw data:")
-print(raw_data.head())
+# Assign 'GUEST' to missing CustomerIDs
+df_clean['CustomerID'] = df_clean['CustomerID'].fillna('GUEST')
+
+# Keep rows with Description or those with a valid StockCode
+df_clean = df_clean[
+    df_clean['Description'].notnull() |
+    df_clean['StockCode'].isin(valid_code_set)
+]
+
+# Remove cancelled transactions (InvoiceNo starts with 'C')
+df_clean = df_clean[~df_clean['InvoiceNo'].astype(str).str.startswith('C')]
+
+# Log how many rows were removed in cleaning
+initial_rows = df.shape[0]
+df_clean = df_clean[(df_clean['Quantity'] > 0) & (df_clean['UnitPrice'] > 0)]
+cleaned_rows = df_clean.shape[0]
+print(f"Rows removed (non-positive Quantity or UnitPrice): {initial_rows - cleaned_rows}")
+
+# Create total transaction price
+df_clean['TotalSales'] = df_clean['Quantity'] * df_clean['UnitPrice']
+
+# Reset index
+df_clean.reset_index(drop=True, inplace=True)
 
 
-# ### **🔹 Step 3: Explore Data**
-# - **Check unique values in categorical columns** to understand product distribution.
-# - **Detect negative values in Quantity & UnitPrice**, which may indicate returns.
+# - Guest checkouts are preserved by assigning 'GUEST' to missing CustomerIDs.
+# - Transactions with missing descriptions are retained only if their StockCode is verified as business-relevant.
+# - Returns and invalid financial entries removed.
+# - A new `TotalSales` column is created as the basis for revenue analysis.
+
+# ### 1.5 Standardize Product Descriptions
 # 
+# Ensure that each `StockCode` maps to a unique and consistent `Description`.
+
+# In[7]:
+
+
+# Check if each StockCode maps to only one Description
+desc_consistency = df_clean.groupby('StockCode')['Description'].nunique()
+inconsistent_codes = desc_consistency[desc_consistency > 1]
+print(f"Number of inconsistent StockCodes: {inconsistent_codes.shape[0]}")
+if not inconsistent_codes.empty:
+    print("Sample of inconsistent StockCodes:")
+    print(inconsistent_codes.head())
+
+# Show differences
+for code in inconsistent_codes.head(5).index:
+    print(f"\nDescriptions for StockCode {code}:")
+    print(df_clean[df_clean['StockCode'] == code]['Description'].unique())
+
 
 # In[8]:
 
 
-# Explore categorical columns: Country and Product Descriptions
-print("\nNumber of unique countries:", raw_data['Country'].nunique())
-print("Number of unique products:", raw_data['Description'].nunique())
+# Standardize descriptions by mapping each StockCode to its most frequent Description
+desc_map = (
+    df_clean.groupby(['StockCode', 'Description'])
+    .size()
+    .reset_index(name='count')
+    .sort_values(['StockCode', 'count'], ascending=[True, False])
+    .drop_duplicates('StockCode')
+    .set_index('StockCode')['Description']
+)
 
+# Replace descriptions using this mapping to ensure consistency
+df_clean['Description'] = df_clean['StockCode'].map(desc_map)
+
+# Recheck consistency
+desc_consistency = df_clean.groupby('StockCode')['Description'].nunique()
+print("Remaining inconsistent codes:", desc_consistency[desc_consistency > 1].shape[0])
+
+
+# - Inconsistencies in naming were resolved by assigning the most common description to each StockCode.
+# - Product-level analysis will now be more accurate and interpretable.
+
+# ## 2. Exploratory Data Analysis (EDA)
+# 
+# In this step, we aim to uncover patterns in customer behavior, product popularity, and temporal trends through visual exploration. This will guide our modeling and business recommendations later on.
+# 
+# ### 2.1 Monthly Sales Trend
+# 
+# We examine monthly sales to understand seasonality and evaluate how purchasing behavior changes over the year. This helps identify peak seasons for strategic planning such as marketing campaigns and inventory management.
 
 # In[9]:
 
 
-# Summary for numerical columns 'Quantity' and 'UnitPrice'
-print("\nSummary of 'Quantity' and 'UnitPrice':")
-print(raw_data[['Quantity', 'UnitPrice']].describe())
+# Calculate overall total revenue
+total_revenue = df_clean['TotalSales'].sum()
+print(f"Total Revenue: £{total_revenue:,.2f}")
 
 
-# #### 📌 Key Findings from the Data Exploration
-# 
-# - **Dataset Size:** 541,909 transactions with 8 columns.
-# - **Key Columns:** `InvoiceNo`, `StockCode`, `Description`, `Quantity`, `InvoiceDate`, `UnitPrice`, `CustomerID`, `Country`.
-# - **Unique Values:**
-#   - **Countries:** 38
-#   - **Products:** 4,223
-# 
-# **Observations:**
-# - **Negative Values:**  
-#   - Some negative values appear in **Quantity** and **UnitPrice**.  
-#   - *Interpretation:* In retail datasets, negative quantities typically represent **returns/refunds**. Negative unit prices may be tied to such adjustments.
-# 
-# ---
+# In[10]:
 
-# ## 🧹 2. Data Cleaning
+
+# Generate daily and monthly sales summaries
+daily_sales = df_clean.set_index('InvoiceDate')['TotalSales'].resample('D').sum()
+monthly_sales = df_clean.set_index('InvoiceDate')['TotalSales'].resample('M').sum()
+
+# Plot trends
+plt.figure(figsize=(14, 5))
+daily_sales.plot(title='Daily Revenue', color='royalblue', alpha=0.6)
+plt.ylabel('Revenue')
+plt.show()
+
+plt.figure(figsize=(14, 4))
+monthly_sales.plot(title='Monthly Revenue', color='darkorange', marker='o')
+plt.ylabel('Revenue')
+plt.show()
+
+
+# In[11]:
+
+
+# Extract month and year for grouping
+df_clean['YearMonth'] = df_clean['InvoiceDate'].dt.to_period('M')
+
+# Aggregate total monthly revenue
+monthly_sales = (
+    df_clean.groupby('YearMonth')['TotalSales']
+    .sum()
+    .reset_index()
+)
+monthly_sales['YearMonth'] = monthly_sales['YearMonth'].astype(str)
+
+# Visualize
+plt.figure(figsize=(12, 5))
+sns.lineplot(data=monthly_sales, x='YearMonth', y='TotalSales', marker='o')
+plt.title('Monthly Sales Trend')
+plt.ylabel('Total Sales (£)')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
+# We observe significant fluctuations in monthly sales:
 # 
-# ### **🔹 Step 1: Handling Missing Values & Incomplete Records**
-# We start by checking for missing values and flagging incomplete rows (e.g., missing descriptions, zero prices, or missing customer IDs).
+# - Revenue peaked in **November 2011** at approximately **£1.5M**
+# - The lowest point occurred in **February 2011**, with revenue appearing to fall below **£600K**
+# - A consistent increase is seen from **August to November 2011**
+# - **December 2011** shows a sharp decline, which may warrant further investigation to determine if it reflects an actual drop or incomplete data
+
+# ### 2.2 Weekday Sales Pattern
 # 
+# We analyze how revenue varies by day of the week to identify purchasing habits across weekdays. This helps us detect whether customers tend to order more on specific days, possibly aligned with marketing cycles or operational schedules.
 
 # In[12]:
 
 
-# Calculate and display the percentage of missing values
-missing_percentage = raw_data.isnull().mean() * 100
-print("\nPercentage of missing values in raw data:")
-print(missing_percentage)
+# Extract day of week as string (e.g., 'Monday')
+df_clean['DayOfWeek'] = df_clean['InvoiceDate'].dt.day_name()
 
+# Aggregate revenue by day of week
+weekday_sales = (
+    df_clean.groupby('DayOfWeek')['TotalSales']
+    .sum()
+    .reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])  # logical order
+    .reset_index()
+)
+
+# Visualize
+plt.figure(figsize=(8, 5))
+sns.barplot(data=weekday_sales, x='DayOfWeek', y='TotalSales')
+plt.title('Total Sales by Day of Week')
+plt.ylabel('Total Sales (£)')
+plt.xlabel('Day of Week')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
+# - **Thursday** recorded the highest total sales, slightly exceeding **£2.2M**
+# - **Tuesday** also shows strong performance, nearly matching Thursday
+# - **Sunday** shows the lowest sales, significantly below **£1M**
+# - **Saturday** appears to have no data, possibly due to no recorded transactions on that day
+
+# ### 2.3 Hourly Sales Pattern
+# 
+# We analyze how revenue is distributed across different hours of the day to identify time windows when customers are most actively purchasing. This helps detect operational and behavioral trends.
 
 # In[13]:
 
 
-# Identify rows with missing 'Description'
-missing_description = raw_data[raw_data['Description'].isnull()]
-print("\nRows with missing descriptions:")
-print(missing_description.head())
-print("\nSummary of rows with missing descriptions (for 'Quantity', 'UnitPrice', 'CustomerID'):")
-print(missing_description[['Quantity', 'UnitPrice', 'CustomerID']].describe())
+# Extract hour from InvoiceDate
+df_clean['Hour'] = df_clean['InvoiceDate'].dt.hour
 
+# Aggregate total revenue by hour
+hourly_sales = (
+    df_clean.groupby('Hour')['TotalSales']
+    .sum()
+    .reset_index()
+)
+
+# Visualize
+plt.figure(figsize=(10, 5))
+sns.lineplot(data=hourly_sales, x='Hour', y='TotalSales', marker='o')
+plt.title('Total Sales by Hour of Day')
+plt.xlabel('Hour of Day')
+plt.ylabel('Total Sales (£)')
+plt.xticks(range(0, 24))
+plt.tight_layout()
+plt.show()
+
+
+# - **Peak activity occurs between 10 AM and 3 PM**, with the highest sales recorded at **10 AM** (over £1.4M)
+# - A noticeable drop-off begins after **3 PM**, with revenue steadily decreasing into the evening
+# - Very limited transactions are recorded before **6 AM** or after **8 PM**
+
+# ### 2.4  Country-wise Sales Distribution
+# 
+# We analyze which countries contribute the most to total revenue. This helps understand geographical distribution and highlights the dominant regions for this e-commerce business.
 
 # In[14]:
 
 
-# Check additional patterns for missing descriptions
-print("\nNumber of rows with missing 'CustomerID' among missing descriptions:",
-      missing_description['CustomerID'].isnull().sum())
-print("\nDistribution of 'UnitPrice' for missing descriptions:")
-print(missing_description['UnitPrice'].value_counts())
+# Aggregate total revenue by country
+country_sales = (
+    df_clean.groupby('Country')['TotalSales']
+    .sum()
+    .sort_values(ascending=False)
+    .reset_index()
+)
 
+# Visualize top 10 countries
+top_10_countries = country_sales.head(10)
+
+plt.figure(figsize=(10, 5))
+sns.barplot(data=top_10_countries, x='TotalSales', y='Country', palette='viridis')
+plt.title('Top 10 Countries by Total Sales')
+plt.xlabel('Total Sales (£)')
+plt.ylabel('Country')
+plt.tight_layout()
+plt.show()
+
+
+# - **United Kingdom** overwhelmingly dominates with total sales close to **£9M**
+# - The next highest contributors—**Netherlands**, **EIRE**, and **Germany**—each account for a significantly smaller share, staying well below **£1M**
+# - Remaining countries show relatively minor contributions by comparison
+
+# ### 2.5 Sales by Country
 
 # In[15]:
 
 
-# Flag incomplete rows (missing Description, UnitPrice == 0, or missing CustomerID)
-raw_data['IsIncomplete'] = raw_data['Description'].isnull() | (raw_data['UnitPrice'] == 0.0) | raw_data['CustomerID'].isnull()
-incomplete_data = raw_data[raw_data['IsIncomplete']]
-print("\nNumber of incomplete rows identified:", len(incomplete_data))
-print("Preview of incomplete rows:")
-print(incomplete_data.head())
+# Aggregate revenue by product description
+top_products = (
+    df_clean.groupby('Description')['TotalSales']
+    .sum()
+    .sort_values(ascending=False)
+    .head(10)
+    .reset_index()
+)
+
+# Visualize
+plt.figure(figsize=(10, 6))
+sns.barplot(data=top_products, x='TotalSales', y='Description', palette='magma')
+plt.title('Top 10 Best-Selling Products by Revenue')
+plt.xlabel('Total Sales (£)')
+plt.ylabel('Product Description')
+plt.tight_layout()
+plt.show()
 
 
-# #### 📌 Key Findings
-# - **Missing Descriptions:**  
-#   - Approximately 0.27% of rows have missing product descriptions.  
-#   - *Interpretation:* These rows often also lack `UnitPrice` and `CustomerID`, suggesting they may be **incomplete transactions**, **promotional entries**, or **non-product records**.
-#  
-# - **Missing Values:**  
-#   - The `CustomerID` is missing in about **24.93%** of transactions, which can occur with guest checkouts in online retail.
-# - **Incomplete Transactions:**  
-#   - Approximately 135,120 rows are flagged as incomplete due to missing values in key fields.  
-#   - *Action:* These rows were marked for further review.
+# - **DOTCOM POSTAGE** generated the highest revenue, exceeding **£200,000**
+# - **REGENCY CAKESTAND 3 TIER** and **PAPER CRAFT, LITTLE BIRDIE** followed closely, both surpassing **£170,000**
+# - Other top contributors include **WHITE HANGING HEART T-LIGHT HOLDER** and **PARTY BUNTING**, each generating between **£100,000–£110,000**
+# - Functional or logistic items such as **POSTAGE** and **Manual** also appear in the top 10 by total sales
 
-# ### **🔹 Step 2: Normalizing and Inspecting Text Data**
-# 
-# To process product descriptions consistently, we normalize text and inspect the least common entries using a WordClou.
+# ## 3. Feature Engineering
 # 
+# We create new variables based on the transaction data to support:
+# - downstream customer segmentation
+# - product grouping
+# - potential predictive modeling
+# 
+# These features capture time-based behavior, transaction magnitude, and structural patterns.
+# 
+# ### 3.1 Time-Based Features
+# 
+# Extract temporal features from the `InvoiceDate` to allow grouping and behavioral profiling by time dimension (e.g., weekday, hour, month).
+
+# In[16]:
+
+
+# Make a copy to avoid chained assignment warnings
+df_fe = df_clean.copy()
+
+# Extract temporal features
+df_fe['InvoiceYear'] = df_fe['InvoiceDate'].dt.year
+df_fe['InvoiceMonth'] = df_fe['InvoiceDate'].dt.month
+df_fe['InvoiceDay'] = df_fe['InvoiceDate'].dt.day
+df_fe['DayOfWeek'] = df_fe['InvoiceDate'].dt.day_name()
+df_fe['Hour'] = df_fe['InvoiceDate'].dt.hour
+
+# Binary features for typical peak hours and weekends
+df_fe['IsPeakHour'] = df_fe['Hour'].between(10, 15)
+df_fe['IsWeekend'] = df_fe['DayOfWeek'].isin(['Saturday', 'Sunday'])
+
+
+# Multiple features were created based on the `InvoiceDate` column:
+# 
+# - `InvoiceYear`, `InvoiceMonth`, `InvoiceDay`, `Hour`, and `DayOfWeek` capture the basic time components
+# - `IsPeakHour` flags transactions during the business peak hours (10 AM to 3 PM)
+# - `IsWeekend` identifies weekend transactions
+
+# ### 3.2 Transactional Features
+# 
+# We engineer features that describe **the scale and behavior of individual transactions**. These will be especially useful for customer-level aggregation, clustering, or classification later on.
+
+# In[17]:
+
+
+# Number of items per invoice line (already exists as Quantity)
+# TotalSales also already exists
+
+# Add average unit price per line (for potential grouping later)
+df_fe['UnitRevenue'] = df_fe['TotalSales'] / df_fe['Quantity']
+
+# Flag for bulk order (arbitrary threshold: 50+ units)
+df_fe['IsBulk'] = df_fe['Quantity'] >= 50
+
+
+# Features that capture the scale and unit economics of each transaction:
+# 
+# - `UnitRevenue`: average revenue per unit for each invoice line
+# - `IsBulk`: flags bulk orders (quantity ≥ 50) for identifying high-volume transactions
+
+# ### 3.3 Aggregated Features by Customer
+# 
+# We generate customer-level features by aggregating transactional data. This enables us to evaluate customer behavior and prepare for segmentation or modeling (e.g., RFM analysis, clustering).
 
 # In[18]:
 
 
-# Normalize 'Description' to lowercase (replace missing values with an empty string)
-raw_data['NormalizedDescription'] = raw_data['Description'].fillna("").str.lower()
+# Filter out guest transactions for customer-level features
+df_cust = df_fe[df_fe['CustomerID'] != 'GUEST'].copy()
 
-# Count occurrences of each unique description
-description_counts = raw_data['NormalizedDescription'].value_counts()
+# Aggregate by CustomerID
+customer_features = df_cust.groupby('CustomerID').agg({
+    'InvoiceNo': 'nunique',                  # Frequency: number of distinct purchases
+    'Quantity': 'sum',                       # Total quantity bought
+    'TotalSales': 'sum',                     # Monetary: total spending
+    'InvoiceDate': ['min', 'max'],           # For Recency calculation
+})
 
+# Flatten multi-level columns
+customer_features.columns = [
+    'NumInvoices', 'TotalQuantity', 'TotalSpent', 'FirstPurchase', 'LastPurchase'
+]
+
+# Recency: days since last purchase from max date
+latest_date = df_cust['InvoiceDate'].max()
+customer_features['RecencyDays'] = (latest_date - customer_features['LastPurchase']).dt.days
+
+
+# Aggregated features were generated at the customer level:
+# 
+# - `NumInvoices`: number of unique purchases
+# - `TotalQuantity`: total items purchased
+# - `TotalSpent`: total monetary contribution
+# - `FirstPurchase`, `LastPurchase`: purchase date range
+# - `RecencyDays`: number of days since the last purchase
+
+# ## 4. Customer Segmentation
+# 
+# ### 4.1 RFM Analysis
+# 
+# Segment customers based on how recently, how often, and how much they purchased. RFM is widely used in marketing to identify valuable customer segments for retention, reactivation, or targeting campaigns.
+# 
+# #### 4.1.1 Create RFM Table and Scoring
 
 # In[19]:
 
 
-# Display the least common descriptions in a table
-table_data = pd.DataFrame({
-    'Description': description_counts.tail(10).index,
-    'Frequency': description_counts.tail(10).values
-})
-print("\nLeast Common Descriptions:")
-print(tabulate(table_data, headers='keys', tablefmt='grid'))
+# Copy from previously aggregated customer features
+rfm = customer_features[['RecencyDays', 'NumInvoices', 'TotalSpent']].copy()
+
+# Rename columns to R, F, M
+rfm.columns = ['Recency', 'Frequency', 'Monetary']
+
+# R score: lower recency is better → reverse scoring
+rfm['R_score'] = pd.qcut(rfm['Recency'], 4, labels=[4, 3, 2, 1]).astype(int)
+
+# F and M score: higher is better
+rfm['F_score'] = pd.qcut(rfm['Frequency'].rank(method='first'), 4, labels=[1, 2, 3, 4]).astype(int)
+rfm['M_score'] = pd.qcut(rfm['Monetary'].rank(method='first'), 4, labels=[1, 2, 3, 4]).astype(int)
+
+# Combine into single RFM score
+rfm['RFM_Score'] = rfm['R_score'].astype(str) + rfm['F_score'].astype(str) + rfm['M_score'].astype(str)
 
 
-# In[20]:
-
-
-# Generate Word Cloud from least common descriptions for visual inspection
-wordcloud = WordCloud(width=800, height=400, background_color='white').generate(" ".join(description_counts.tail(50).index))
-plt.figure(figsize=(8, 4))
-plt.imshow(wordcloud, interpolation='bilinear')
-plt.axis('off')  # Hide axes
-plt.title('Least Common Descriptions (Word Cloud)')
-plt.show()
-
-
-# In[21]:
-
-
-# Analyze description lengths to identify anomalies
-raw_data['DescriptionLength'] = raw_data['NormalizedDescription'].str.len()
-shortest_descriptions = raw_data.sort_values(by='DescriptionLength').head(20)
-longest_descriptions = raw_data.sort_values(by='DescriptionLength', ascending=False).head(20)
-print("\nShortest Descriptions (with InvoiceNo & StockCode):")
-print(shortest_descriptions[['Description', 'InvoiceNo', 'StockCode']])
-print("\nLongest Descriptions (with InvoiceNo & StockCode):")
-print(longest_descriptions[['Description', 'InvoiceNo', 'StockCode']])
-
-
-# ### **🔹 Step 3: Removing Erroneous or Irrelevant Data**
-# 
-# We now identify and remove placeholder descriptions, very short descriptions, and cancelled transaction.
-# 
-
-# #### 📌 Identifying Placeholder Descriptions
-# To ensure data quality, we identified descriptions that might be **system-generated placeholders** or **erroneous entries**. Using the **WordCloud visualization**, we detected patterns in rare descriptions, revealing that some descriptions contain generic terms like `test`, `sample`, `unknown`, `barcode`, `damage`, `lost`, and similar words. These words suggest:
-# 
-# - **Test Entries:** Data created for system testing (`test`, `sample`).
-# - **Incomplete or Faulty Records:** Rows where descriptions indicate missing or incorrect data (`unknown`, `barcode`, `?`).
-# - **Damaged or Lost Products:** Indications of stock issues (`damage`, `broken`, `lost`, `thrown`).
-# - **Mislabeling or Wrong Entries:** Cases where the wrong product might have been logged (`wrong`, `wrongly`).
-# 
-# To flag these descriptions, we applied the following filtering logic:
-# ```python
-# placeholder_descriptions = data[
-#     data['NormalizedDescription'].str.contains(
-#         'test|sample|unknown|placeholder|barcode|\?|damage|wrong|wrongly|lost|broken|thrown', 
-#         na=False, regex=True
-#     )
-# ]
-# ```
-# This ensures that any potentially unreliable or invalid product descriptions are **identified for further inspection or removal** before performing deeper analysis.
-# 
+# #### 4.1.2 RFM Segment Mapping
 
 # In[24]:
 
 
-# Identify placeholder descriptions using specific keywords
-placeholder_keywords = 'test|sample|unknown|placeholder|barcode|\?|damage|wrong|wrongly|lost|broken|thrown'
-placeholder_descriptions = raw_data[raw_data['NormalizedDescription'].str.contains(placeholder_keywords, na=False, regex=True)]
-print("\nIdentified Placeholder Descriptions (for further inspection):")
-print(placeholder_descriptions[['InvoiceNo', 'StockCode', 'Description', 'Quantity', 'UnitPrice', 'CustomerID']])
-
-
-# In[25]:
-
-
-# Remove placeholder descriptions from the dataset
-clean_data = raw_data.drop(placeholder_descriptions.index)
-print(f"\nRemoved {len(placeholder_descriptions)} placeholder descriptions.")
-
-
-# In[26]:
-
-
-# Identify and remove short descriptions (length <= 3)
-short_descriptions = clean_data[clean_data['NormalizedDescription'].str.len() <= 3]
-print("\nShort Descriptions identified for removal:")
-print(short_descriptions[['Description', 'InvoiceNo', 'StockCode']])
-clean_data = clean_data.drop(short_descriptions.index)
-print(f"Removed {len(short_descriptions)} short descriptions.")
-
-
-# In[27]:
-
-
-# Identify and remove cancelled transactions (InvoiceNo starting with 'C')
-cancelled_transactions = clean_data[clean_data['InvoiceNo'].str.startswith('C')]
-print("\nCancelled Transactions identified for removal:")
-print(cancelled_transactions)
-clean_data = clean_data.drop(cancelled_transactions.index)
-print(f"Removed {len(cancelled_transactions)} cancelled transactions.")
-
-
-# **📌 Note**: While duplicates were dropped to avoid overcounting, in some contexts (e.g., basket analysis) retaining duplicates might provide additional insights.
-
-# In[29]:
-
-
-# Save all removed transactions for review
-dropped_transactions = pd.concat([placeholder_descriptions, short_descriptions, cancelled_transactions])
-dropped_transactions.to_csv('../datasets/dropped_transactions.csv', index=False)
-print(f"\n{len(dropped_transactions)} transactions saved to 'dropped_transactions.csv' for further analysis.")
-
-
-# In[30]:
-
-
-# Verify the cleanup by checking the number of remaining transactions
-print(f"\nRemaining transactions after cleanup: {len(clean_data)}")
-
-
-# ### **🔹 Step 4: Additional Data Cleaning**
-# 
-# We now handle duplicate transactions, negative quantities, and zero unit prices. Finally, we convert the date column for time series analysi.
-# 
-
-# In[32]:
-
-
-# Detect potential duplicate transactions based on key columns
-duplicate_transactions = clean_data.duplicated(subset=['InvoiceNo', 'StockCode', 'Quantity', 'UnitPrice'], keep=False)
-print("\nPotential Duplicate Transactions (may include valid multiple-item orders):")
-print(clean_data[duplicate_transactions])
-
-
-# Note: This is not exactly the duplicates that we are looking for since customers might ordered several items in one order.
-
-# In[34]:
-
-
-# Identify true duplicates by counting (InvoiceNo, StockCode) occurrences
-duplicate_counts = clean_data.groupby(['InvoiceNo', 'StockCode']).size()
-true_duplicates = duplicate_counts[duplicate_counts > 1].reset_index()
-true_duplicates.columns = ['InvoiceNo', 'StockCode', 'Count']
-print("\nDuplicate Transactions (Same InvoiceNo & StockCode appearing multiple times):")
-print(true_duplicates.head(20))
-print(f"Total duplicate (InvoiceNo, StockCode) entries found: {len(true_duplicates)}")
-
-
-# In[35]:
-
-
-# Drop duplicates (keeping the first occurrence)
-clean_data = clean_data.drop_duplicates(subset=['InvoiceNo', 'StockCode'], keep='first')
-print(f"\nRemaining transactions after dropping duplicates: {len(clean_data)}")
-
-
-# In[36]:
-
-
-# Handle Negative Quantities
-negative_quantity_transactions = clean_data[clean_data['Quantity'] < 0]
-print("\nNegative Quantity Transactions:")
-print(negative_quantity_transactions.head(20))
-print(f"Total negative quantity transactions found: {len(negative_quantity_transactions)}")
-
-
-# In[37]:
-
-
-# Handle Zero Unit Price Transactions
-zero_price_transactions = clean_data[clean_data['UnitPrice'] == 0.0]
-print("\nTransactions with Zero Unit Price:")
-print(zero_price_transactions.head(20))
-print(f"Total transactions with zero unit price found: {len(zero_price_transactions)}")
-
-
-# In[38]:
-
-
-# Remove zero-price transactions from the dataset
-clean_data = clean_data[clean_data['UnitPrice'] > 0]
-print(f"\nRemaining transactions after removing zero-price transactions: {len(clean_data)}")
-
-
-# In[39]:
-
-
-# Check for missing or incorrect country names
-print("\nChecking for missing or incorrect country names...")
-print("Missing country values count:", clean_data['Country'].isnull().sum())
-print("Unique country names:", clean_data['Country'].unique())
-
-
-# In[40]:
-
-
-# Convert 'InvoiceDate' to datetime format and set as index for time-series analysis
-clean_data['InvoiceDate'] = pd.to_datetime(clean_data['InvoiceDate'], errors='coerce')
-clean_data.set_index('InvoiceDate', inplace=True)
-print("\nConverted 'InvoiceDate' to datetime format and set as index.")
-
-
-# In[41]:
-
-
-# Define the output file path
-cleaned_file_path = "../datasets/cleaned_ecommerce_data.csv"
-
-# Save the cleaned data
-clean_data.to_csv(cleaned_file_path, index=False, encoding="utf-8")
-
-print(f" Cleaned dataset saved successfully: {cleaned_file_path}")
-
-
-# ---
-# 
-# ## 📊 3. Data Analysis & Visualization
-# 
-# ### **🔹 Step 1: Sales Analysis by Country**
-# 
-# We calculate the total sales and visualize the top countries by ales.
-# 
-
-# In[43]:
-
-
-# Aggregate Total Sales by Country
-clean_data['TotalSales'] = clean_data['Quantity'] * clean_data['UnitPrice']
-
-
-# In[44]:
-
-
-# Aggregate Total Sales by Country and sort descending
-country_sales = clean_data.groupby('Country')['TotalSales'].sum().reset_index()
-country_sales = country_sales.sort_values(by='TotalSales', ascending=False)
-print("\nTotal Sales by Country (Top 10):")
-print(country_sales.head(10))
-
-
-# In[45]:
-
-
-# Create a bar plot for Total Sales by Country
-fig_country_sales = px.bar(country_sales.head(10),
-                           x='Country', y='TotalSales',
-                           title='Total Sales by Country',
-                           color='TotalSales',
-                           text=country_sales.head(10)['TotalSales'].apply(lambda x: f"${x:,.0f}"),
-                           color_continuous_scale='viridis')
-fig_country_sales.update_traces(textposition='outside')
-fig_country_sales.update_layout(xaxis_title="Country",
-                                yaxis_title="Total Sales",
-                                bargap=0.2,
-                                height=600)
-fig_country_sales.show()
-
-
-# **📌 Country-Level Sales:**  
-#   - The **United Kingdom** dominates with total sales of approximately **$8.96M**.
-#   - Other top countries include **Netherlands**, **EIRE**, **Germany**, and **France**.
-
-# ### **🔹 Step 2: Top 10 Products by Total Sales**
-
-# In[48]:
-
-
-# Top 10 Products by Total Sales 
-if 'TotalSales' in clean_data.columns and 'Description' in clean_data.columns:
-    top_products = clean_data.groupby('Description')['TotalSales'].sum().nlargest(10).reset_index()
-
-    # Fore Seaborn visualizations
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x='TotalSales', y='Description', data=top_products)
-    plt.title('Top 10 Products by Total Sales (Seaborn)')
-    plt.xlabel('Total Sales')
-    plt.ylabel('Product Name')
-    plt.show()
-
-    # For interactive Plotly visualizations
-    fig_bar = px.bar(top_products, x='TotalSales', y='Description',
-                     title='Top 10 Products by Total Sales (Plotly)', orientation='h')
-    fig_bar.update_layout(xaxis_title='Total Sales', yaxis_title='Product Name')
-    fig_bar.update_yaxes(autorange='reversed')  # To show them in descending order
-    fig_bar.show()
-
-
-# **📌 Key Insight:**
-# - focusing on the top 10 products by **TotalSales** helps in identifying best-selling items for targeted marketing an inventory optimization.
-
-# ### **🔹 Step 3: Time Series Analysis**
-# 
-# We explore yearly, monthly, and weekly sales trend.
-# 
-
-# In[51]:
-
-
-# Yearly Sales Trend using resampling
-yearly_sales = clean_data['TotalSales'].resample('Y').sum().reset_index()
-print("\nYearly Sales Trend:")
-print(yearly_sales)
-
-
-# **📌 Yearly Trend:**
-#   - Sales grow dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**.  
-#   - *Note:* Since 2010 data only covers December, a monthly breakdown is necessary.
-#     
-# In order to understand trends, we should compare month-to-month growth within 2011.
-
-# In[53]:
-
-
-# Analyze Monthly Sales Trend
-monthly_sales = clean_data['TotalSales'].resample('M').sum().asfreq('M', fill_value=0).reset_index()
-print("\nMonthly Sales Trend (first few records):")
-print(monthly_sales.head())
-
-fig_monthly_sales = px.line(monthly_sales, x='InvoiceDate', y='TotalSales',
-                            title='Monthly Sales Trend', markers=True)
-fig_monthly_sales.update_layout(
-    xaxis=dict(
-        rangeselector=dict(
-            buttons=list([
-                dict(count=1, label="1m", step="month", stepmode="backward"),
-                dict(count=6, label="6m", step="month", stepmode="backward"),
-                dict(step="all")
-            ])
-        ),
-        rangeslider=dict(visible=True),
-        type="date"
-    )
+# Define RFM segment based on simple rules
+def map_segment(r, f, m):
+    if r >= 3 and f >= 3 and m >= 3:
+        return 'Champions'
+    elif r >= 3 and f >= 2:
+        return 'Loyal'
+    elif r >= 2 and m >= 3:
+        return 'Big Spenders'
+    elif r == 4:
+        return 'New Customers'
+    elif f >= 3:
+        return 'Frequent Buyers'
+    elif r <= 2 and f <= 2 and m <= 2:
+        return 'At Risk'
+    else:
+        return 'Other'
+    
+# Apply RFM scoring function
+rfm['Segment'] = rfm.apply(
+    lambda x: map_segment(int(x['R_score']), int(x['F_score']), int(x['M_score'])),
+    axis=1
 )
-fig_monthly_sales.show()
+# Define segment names
+SEGMENT_NAME_MAP = {
+    'Champions': 'Best',
+    'Loyal': 'Recent',
+    'Big Spenders': 'High-Spend',
+    'New Customers': 'New',
+    'Frequent Buyers': 'Frequent',
+    'At Risk': 'Inactive',
+    'Others': 'Other'
+}
+
+# Apply segment mapping
+rfm['Segment'] = rfm['Segment'].map(SEGMENT_NAME_MAP)
 
 
-# **📌 Monthly Trend:**
-# - December 2010 (812k) shows a peak, followed by a dip in January 2011 (686k) (possibly due to a post-holiday slowdown)
-# - March 2011 (713k) had a sales recovery, suggesting a potential seasonal trend
-# - *Seasonal Insight:* **Holiday demand** significantly boosts December sales.
-
-# In[55]:
-
-
-# Analyze Weekly Sales Trend
-weekly_sales = clean_data['TotalSales'].resample('W').sum().asfreq('W', fill_value=0).reset_index()
-print("\nWeekly Sales Trend (first few records):")
-print(weekly_sales.head())
-
-fig_weekly_sales = px.line(weekly_sales, x='InvoiceDate', y='TotalSales',
-                           title='Weekly Sales Trend', markers=True,
-                           color_discrete_sequence=['orange'])
-fig_weekly_sales.show()
-
-
-# **📌 Weekly Trend:** 
-# - Sales peaked in the week of **December 12, 2010**.  
-# - Zero sales in the first week of January may indicate a data gap or store closure.
-
-# ### **🔹 Step 4: Sales by Day & Hour**
-# 
-# Next, we analyze sales by the day of the week and by the hour of the da.
+# Based on Recency, Frequency, and Monetary scoring, the customer base was segmented into distinct behavioral groups:
 # 
+# | Segment                       | Description                             |
+# |-------------------------------|-----------------------------------------|
+# | **Champions (Best)**          | Frequent, recent, and high-value buyers |
+# | **Loyal (Recent)**            | Purchased recently but with low value   |
+# | **Big Spenders (High-Spend)** | High spenders with less frequent visits |
+# | **Frequent Buyers (Frequent)**| Regular buyers with small transactions  |
+# | **New Customers (New)**       | First-time or very recent customers     |
+# | **At Risk (Inactive)**        | Long since last purchase, low activity  |
+# | **Others (Other)**            | No strong behavior pattern              |
 
-# In[58]:
-
-
-# Sales by Day of the Week
-clean_data['DayOfWeek'] = clean_data.index.day_name()
-daywise_sales = clean_data.groupby('DayOfWeek')['TotalSales'].sum().reindex(
-    ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']).reset_index()
-print("\nSales by Day of the Week:")
-print(daywise_sales)
-
-fig_daywise_sales = px.bar(daywise_sales, x='DayOfWeek', y='TotalSales',
-                           title='Sales by Day of the Week',
-                           color='TotalSales', color_continuous_scale='reds')
-fig_daywise_sales.show()
-
-
-# **📌 Sales by Day of the Week:**
-# - **Tuesday** and **Thursday** record the highest sales (over 2.1M each).  
-# - **Sunday** shows the lowest sales (~797k).  
-# - *Observation:* The absence of Saturday sales (NaN) suggests no transactions—possibly due to store closure or data collection issues.
-
-# In[60]:
-
-
-# Sales by Hour of the Day
-clean_data['Hour'] = clean_data.index.hour
-hourly_sales = clean_data.groupby('Hour')['TotalSales'].sum().reset_index()
-print("\nSales by Hour:")
-print(hourly_sales)
-
-fig_hourly_sales = px.bar(hourly_sales, x='Hour', y='TotalSales',
-                          title='Sales by Hour of the Day',
-                          color='TotalSales', color_continuous_scale='reds')
-fig_hourly_sales.show()
-
-
-# **📌 Hourly Sales:**
-#   - Peak transaction hours are between **10 AM and 3 PM**.  
-#   - Sales drop sharply after 5 PM, aligning with standard business hours.
-
-# ### **🔹 Step 5: Distribution & Correlation Analysis**
-# 
-# Let's inspect the unit price distribution and see how key variables correlat.
-# 
-
-# In[63]:
-
-
-# Unit Price Distribution using Seaborn
-plt.figure(figsize=(10, 6))
-sns.boxplot(x=clean_data['UnitPrice'])
-plt.title('Unit Price Distribution')
-plt.show()
-
-
-# In[64]:
-
-
-# Correlation Heatmap for key variables
-plt.figure(figsize=(8, 5))
-sns.heatmap(clean_data[['Quantity', 'UnitPrice', 'TotalSales']].corr(), annot=True, cmap='coolwarm', fmt='.2f')
-plt.title('Correlation Heatmap')
-plt.show()
-
-
-# **📌 Correlation Insights:**  
-#   - **Quantity vs. TotalSales:** Strong positive correlation (0.91) indicates that increasing the number of items sold boosts revenue.
-#   - **UnitPrice vs. TotalSales:** Little to no correlation (around -0.2 to 0.0) suggests that raising prices does not necessarily increase revenue.
-# 
-# **📌 Business Recommendations:**  
-#   - **Volume-Based Promotions:**  
-#     - 📦 **Bundle Discounts:** Offer product bundles at a reduced price.
-#     - 🔁 **Subscription & Loyalty Programs:** Reward frequent buyers with exclusive deals.
-#     - 🤝 **Cross-Selling Discounts:** Suggest related products when bought together.
-# - *Additional Note:* Analyzing the impact of **return transactions (negative quantities)** separately could provide further actionable insights.
-# 
-# ---
-
-# ## Save & Convert Notebook to Python Script
-# To ensure that our Jupyter Notebook (`.ipynb`) is always synchronized with a Python script (`.py`), we will **automatically convert** the notebook to a Python script at the end of execution. This ensures consistency when pushing updates to GitHub.
-
-# In[67]:
-
-
-# Define notebook and script filenames
-notebook_name = "ecommerce_analysis.ipynb"  # Update this if the notebook name changes
-script_name = "ecommerce_analysis.py"
-
-# Convert the Jupyter Notebook to a Python script
-get_ipython().system(f'jupyter nbconvert --to script {notebook_name}')
-
-# Move the Python script to the 'scripts' folder
-destination_path = f"../scripts/{script_name}"
-shutil.move(script_name, destination_path)
-
-# Print confirmation message
-print(f" Notebook '{notebook_name}' successfully converted and saved as '{destination_path}'")
-
-
-# ## 🛠️ Restoring `InvoiceDate` as a Column
-# 
-# ### 📌 Why Reset `InvoiceDate`?
-# During the data analysis process, `InvoiceDate` was set as an **index** for easier time-series analysis. However, in Power BI, we need `InvoiceDate` as a **regular column** to create visualizations based on time (e.g., Monthly & Weekly Sales Trend as a column.")
-# 
-
-# In[115]:
-
-
-# Reset the index to restore 'InvoiceDate' as a column
-clean_data.reset_index(inplace=True)
-
-# Save the cleaned dataset again
-clean_data.to_csv("../datasets/cleaned_ecommerce_data.csv", index=False, encoding="utf-8")
-
-print("Cleaned dataset saved with 'InvoiceDate' as a column.")
-
-
-# ---
-# 
-# ## 💡 Summary of Insights
-# 
-# ### 1. Data Quality & Cleaning
-# - **Incomplete Transactions:**  
-#   Over **135K transactions** were flagged as incomplete due to missing descriptions, zero unit prices, or missing CustomerID (common in guest checkouts). Negative values generally represent returns/refunds.
-# - **Data Cleaning Measures:**  
-#   Placeholder entries (e.g., “?”, “damages”, “samples”) and very short descriptions were removed to improve data quality. Cancelled transactions and duplicates were dropped, resulting in a refined dataset for analysis.
-# 
-# ### 2. Regional Performance & Top Products Analysis
-# - **Regional Sales Dominance:**  
-#   The **United Kingdom** leads with total sales of approximately **$8.96M**, with other notable contributions from the Netherlands, EIRE, Germany, and France.
-# - **Top Products Insight:**  
-#   Visualizations of the top 10 products by total sales highlight the best-selling items. This analysis can guide targeted marketing and inventory optimization strategies by focusing on high-performing products.
-# 
-# ### 3. Time Series & Transaction Patterns
-# - **Yearly Trends:**  
-#   Sales grow dramatically from **December 2010 (812k)** to **December 2011 (9.77M)**. Note that 2010 data only covers December.
-# - **Monthly Trends:**  
-#   A seasonal pattern emerges with a December peak, a post-holiday dip in January, and a recovery in March.
-# - **Weekly & Daily Patterns:**  
-#   Weekly trends show a peak during the week of December 12, 2010, while day-of-week analysis indicates highest sales on Tuesday and Thursday, and the lowest on Sunday. The absence of Saturday sales suggests either store closure or data collection issues.
-# - **Hourly Trends:**  
-#   Transactions peak between **10 AM and 3 PM**, aligning with standard business hours.
-# 
-# ### 4. Correlation & Business Strategy
-# - **Key Correlations:**  
-#   A strong correlation (0.91) between **Quantity** and **Total Sales** indicates that increasing the number of items sold has a direct impact on revenue. In contrast, **Unit Price** shows little to no correlation with Total Sales.
-# - **Strategic Implications:**  
-#   Focus on volume-based promotions, such as bundle discounts, subscription/loyalty programs, and cross-selling offers, rather than relying solely on price adjustments to drive revenue growth.
-#   
-# ---
-# 
-# **Overall, the analysis supports a strategy focused on boosting sales volume and optimizing operational efficiency. The insights across regional performance, top product identification, temporal trends, and correlation analysis provide a solid basis for targeted marketing, staffing, and inventory management decisions.** 😃
-# management decisions.** 😃
-# 
+# #### 4.1.3 RFM Segment Visualization
 
 # In[ ]:
 
 
+# Calculate average R, F, M per segment
+rfm_segment_stats = (
+    rfm.groupby('Segment')[['Recency', 'Frequency', 'Monetary']]
+    .mean()
+    .round(1)
+    .sort_values(by='Monetary', ascending=False)
+)
+
+# Reverse Recency so that "recent = higher score"
+rfm_segment_stats_adj = rfm_segment_stats.copy()
+rfm_segment_stats_adj['Recency'] = (
+    rfm_segment_stats_adj['Recency'].max() - rfm_segment_stats_adj['Recency']
+)
+
+# Normalize all values to [0, 1] scale
+rfm_norm_fixed = (
+    (rfm_segment_stats_adj - rfm_segment_stats_adj.min()) /
+    (rfm_segment_stats_adj.max() - rfm_segment_stats_adj.min())
+)
+
+# Visualize normalized RFM
+sns.set_palette("Pastel1")
+rfm_norm_fixed.plot(kind='bar', figsize=(12, 6))
+plt.title('Normalized RFM Metrics by Segment (Recency Reversed / Short Labels)')
+plt.ylabel('Normalized Value (0–1)')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
 
 
+# Using Min–Max normalization with reversed Recency values, we observe the following:
+# 
+# - **Best** clearly score highest across all three metrics:  
+#   - They purchased recently, made frequent purchases, and generated high revenue.
+# - **High-Spend** show strong Monetary value but lower Frequency and slightly older Recency.
+# - **Frequent** exhibit higher Frequency with low Monetary, indicating regular but low-value transactions.
+# - **Recent** customers purchased recently but in smaller volume and value.
+# - **Inactive** and **New Customers** have the lowest scores overall — either inactive or not yet engaged.
+# - **Other** fall between the main strategic groups without distinct RFM characteristics.
+# 
+
+# ### 4.2 K-Means Clustering
+# 
+# We apply unsupervised learning (K-Means) to uncover latent customer groups based on behavioral patterns, without relying on predefined RFM thresholds. This helps discover patterns RFM may miss.
+# 
+# #### 4.2.1 Select and Standardize Features
+# 
+# K-Means is sensitive to feature scale, so all variables need to be standardized. We use `Recency`, `Frequency`, and `Monetary` values as input.
+
+# In[25]:
+
+
+from sklearn.preprocessing import StandardScaler
+
+# Use same customer_features table from earlier
+kmeans_data = customer_features[['RecencyDays', 'NumInvoices', 'TotalSpent']].copy()
+kmeans_data.columns = ['Recency', 'Frequency', 'Monetary']  # rename for consistency
+
+# Standardize features
+scaler = StandardScaler()
+kmeans_scaled = scaler.fit_transform(kmeans_data)
+
+
+# #### 4.2.2 Find Optimal K using Elbow Method
+# 
+# We determine the ideal number of clusters (K) by evaluating how inertia (within-cluster sum of squares) changes with increasing K.
+
+# In[26]:
+
+
+from sklearn.cluster import KMeans
+
+# Try different K values and store inertia
+inertias = []
+K_range = range(2, 11)
+
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(kmeans_scaled)
+    inertias.append(kmeans.inertia_)
+
+# Plot elbow curve
+plt.figure(figsize=(8, 5))
+plt.plot(K_range, inertias, marker='o')
+plt.title('Elbow Method: Optimal K')
+plt.xlabel('Number of Clusters (K)')
+plt.ylabel('Inertia')
+plt.xticks(K_range)
+plt.tight_layout()
+plt.show()
+
+
+# #### 4.2.3 Apply K-Means with K=4
+# 
+# Based on the elbow method (Step 4.2.2), we selected **K=4** as the optimal number of clusters. We then applied the K-Means algorithm using standardized RFM features to assign each customer to one of four behavior-based clusters.
+# 
+# - Standardized features: `Recency`, `Frequency`, `Monetary`
+# - Random seed: 42 for reproducibility
+# - Cluster labels were added back to the original customer-level data
+
+# In[27]:
+
+
+# Apply KMeans with K=4
+kmeans = KMeans(n_clusters=4, random_state=42)
+kmeans_labels = kmeans.fit_predict(kmeans_scaled)
+
+# Attach cluster labels to original customer data
+kmeans_data_with_labels = kmeans_data.copy()
+kmeans_data_with_labels['Cluster'] = kmeans_labels
+
+
+# #### 4.2.4 Visualize Cluster Characteristics
+# 
+# To interpret the behavioral differences among clusters, we calculated the **average RFM metrics per cluster**, applied Min–Max normalization, and plotted them as grouped bar charts.
+# 
+# - This reveals how clusters differ in spending, purchase frequency, and recency.
+# - Visualization enables intuitive comparison and supports later business recommendations.
+
+# In[28]:
+
+
+# Aggregate mean RFM per cluster
+cluster_summary = (
+    kmeans_data_with_labels.groupby('Cluster')[['Recency', 'Frequency', 'Monetary']]
+    .mean()
+    .round(1)
+    .sort_values(by='Monetary', ascending=False)
+)
+
+# Normalize for comparison
+cluster_norm = (
+    (cluster_summary - cluster_summary.min()) /
+    (cluster_summary.max() - cluster_summary.min())
+)
+
+# Visualize
+sns.set_palette("Set2")
+cluster_norm.plot(kind='bar', figsize=(12, 6))
+plt.title('Normalized RFM Characteristics by Cluster')
+plt.ylabel('Normalized Score (0–1)')
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.show()
+
+
+# #### 4.2.6 Visualize Cluster Scatterplot
+# 
+# This scatterplot visualizes the four K-Means customer clusters along two business-critical dimensions:
+# 
+# - **X-axis:** Recency (days since last purchase) → lower = more recent
+# - **Y-axis:** Total Monetary Value (£)
+# - **Point Size:** Purchase Frequency
+# - **Color:** Assigned cluster label
+
+# In[29]:
+
+
+# Attach cluster labels to unscaled customer data
+kmeans_plot_df = kmeans_data.copy()
+kmeans_plot_df['Cluster'] = kmeans_labels
+
+# Plot: Recency vs Monetary, colored by cluster
+plt.figure(figsize=(10, 6))
+sns.scatterplot(
+    data=kmeans_plot_df,
+    x='Recency', y='Monetary',
+    hue='Cluster', palette='Set2',
+    size='Frequency', sizes=(20, 200), alpha=0.7
+)
+plt.title('Customer Clusters by Recency and Monetary Value')
+plt.xlabel('Recency (Days since last purchase)')
+plt.ylabel('Total Spending (£)')
+plt.legend(title='Cluster', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.tight_layout()
+plt.show()
+
+
+# Each cluster displays distinct customer behaviors based on Recency, Frequency, and Monetary metrics:
+# 
+# | Cluster | Profile Summary |
+# |---------|------------------|
+# | **Cluster 2** | High frequency, high spend, and recent activity → **Highly engaged top-value customers** |
+# | **Cluster 1** | Moderate frequency and spending, relatively recent → **Steady, mid-tier customers** |
+# | **Cluster 3** | Low frequency and value, moderately recent → **occasional low-spenders** |
+# | **Cluster 0** | No recent activity, near-zero frequency and spend → **Inactive or churned customers** |
+# 
+# 
+
+# ## 5. Summary of Insights
+# 
+# ### 🔹 Monthly Sales Trends
+# - Monthly sales peaked in **November 2011**, with a sharp increase starting from **August**
+# - **February** marked the lowest month in total sales, followed by a steady rise
+# - **December** showed a sharp decline, possibly due to limited data recording
+# 
+# ### 🔹 Weekday and Hourly Behavior
+# - **Thursday** and **Tuesday** were the highest revenue days
+# - Sales concentrated between **10 AM – 3 PM**, with minimal activity in early mornings or late evenings
+# 
+# ### 🔹 Country-Level Revenue
+# - The **United Kingdom** contributed the overwhelming majority of revenue (over £8.9M)
+# - All other countries showed significantly lower sales volume
+# 
+# ### 🔹 Top Products
+# - Revenue was concentrated in a small group of products, led by **DOTCOM POSTAGE**, **REGENCY CAKESTAND**, and **PAPER CRAFT, LITTLE BIRDIE**
+# 
+# ### 🔹 RFM Segmentation
+# - The majority of valuable customers fall into the **Best** and **High-Spend** segments
+# - **Inactive** and **New** groups represent low-engagement or reactivation opportunities
+# - The **Frequent** group indicates opportunity for cross-selling or bundling
+# 
+# ### 🔹 K-Means Clustering
+# - **Cluster 2** = High-value, recent, frequent → likely brand loyalists
+# - **Cluster 1** = Moderate value, moderately recent → retention candidates
+# - **Cluster 3** = Low value, mid recency → casual shoppers
+# - **Cluster 0** = Low value, inactive → reactivation or churned segment
+
+# ## 6. Actionable Recommendations
+# 
+# | Segment / Cluster | Key Traits | Strategic Action |
+# |-------------------|------------|------------------|
+# | **Best (RFM) / Cluster 2** | Recent, frequent, high spend | Implement loyalty rewards, early-access campaigns, premium upselling |
+# | **High-Spend / Cluster 1** | High spend, lower frequency | Send personalized bundles or promotions to increase visit frequency |
+# | **Frequent / Cluster 3** | Frequent visits, low value | Promote bulk discounts or cross-sell higher-priced items |
+# | **Recent / New** | Recent buyers with low engagement | Offer welcome campaigns and introductory bundles |
+# | **Inactive / Cluster 0** | Long inactivity, low spend | Launch win-back offers (e.g., "We Miss You" email + discount) |
+# | **Other** | No distinct pattern | Monitor passively, apply general engagement nudges |
+# 
+
+# ## 7. Predictive Modeling for Customer Targeting
+# 
+# This step aims to build a machine learning model to identify customers who are likely to become **high-value contributors** to revenue, based on their behavioral features.
+# 
+# ### 7.1 Define Target Variable
+# 
+# We define high-value customers as those in the top 25% of total spending (`Monetary`).  
+# This binary classification allows us to predict which customers are most likely to contribute significant revenue.
+
+# In[30]:
+
+
+# Define high-value customers (top 25%)
+threshold = kmeans_data['Monetary'].quantile(0.75)
+kmeans_data_with_labels['HighValueTarget'] = (kmeans_data_with_labels['Monetary'] >= threshold).astype(int)
+
+
+# ### 7.2 Select Predictive Features
+# 
+# We use two customer behavioral metrics:
+# 
+# - `Recency`: How recently the customer purchased  
+# - `Frequency`: How often the customer purchased
+# 
+# These were selected based on previous EDA and segmentation insights.
+
+# In[31]:
+
+
+# Select features and target
+model_features = kmeans_data_with_labels[['Recency', 'Frequency']]
+target = kmeans_data_with_labels['HighValueTarget']
+
+
+# ### 7.3 Handle Class Imbalance
+# 
+# The dataset shows a 75:25 class imbalance.  
+# To compensate, we compute `scale_pos_weight = 3.0`, which adjusts the learning objective to give more weight to underrepresented class 1 (high-value customers).
+
+# In[32]:
+
+
+# Check imbalance ratio
+scale_ratio = (target == 0).sum() / (target == 1).sum()
+print(f"Scale pos weight: {scale_ratio:.2f}")
+
+
+# ### 7.4 Train-Test Split
+# 
+# We split the data into training and testing sets to evaluate model generalization.
+
+# In[33]:
+
+
+from sklearn.model_selection import train_test_split
+
+X_train, X_test, y_train, y_test = train_test_split(
+    model_features, target, test_size=0.3, random_state=42
+)
+
+
+# ### 7.5 Train LightGBM Model
+# 
+# We use LightGBM with `scale_pos_weight` to handle class imbalance.  
+# This model is chosen for its speed, recall performance, and strong real-world application in classification problems.
+
+# In[34]:
+
+
+from lightgbm import LGBMClassifier
+
+lgbm = LGBMClassifier(scale_pos_weight=scale_ratio, random_state=42)
+lgbm.fit(X_train, y_train)
+
+
+# ### 7.6 Evaluate Model Performance
+# 
+# We evaluate the model using precision, recall, and F1-score.  
+# Our primary goal is **high recall for class 1** (high-value customers), ensuring we do not miss key opportunities.
+
+# In[35]:
+
+
+from sklearn.metrics import classification_report
+
+y_pred = lgbm.predict(X_test)
+print(classification_report(y_test, y_pred))
+
+
+# ## 8. Advanced Feature Engineering for Model Enhancement
+# 
+# To enhance model accuracy and better capture purchasing behaviors, we introduced features beyond the traditional RFM metrics. These new features reflect pricing sensitivity, purchase timing, and product diversity—factors that are often strong indicators of customer value but are not captured by Recency, Frequency, or Monetary alone.
+# 
+# ### 8.1 Create Engineered Features per Customer
+# 
+# We generated individual-level features based on behavioral patterns:
+# 
+# - `IsWeekend`, `IsPeakHour`: Capture temporal behaviors
+# - `IsBulk`, `AvgUnitPrice`: Capture volume and price sensitivity
+# - `UniqueProducts`, `DiversityRatio`: Capture product exploration
+# - `AOV`: Highlights purchase efficiency
+# 
+# These features were first derived at the **transaction level**, then aggregated per customer in the next step.
+
+# In[36]:
+
+
+df_model = df_fe.copy()
+
+# Add derived fields
+df_model['TotalSales'] = df_model['Quantity'] * df_model['UnitPrice']
+df_model['AvgUnitPrice'] = df_model['TotalSales'] / df_model['Quantity']
+df_model['IsBulk'] = df_model['Quantity'] >= 50
+df_model['IsWeekend'] = df_model['DayOfWeek'].isin(['Saturday', 'Sunday'])
+df_model['IsPeakHour'] = df_model['Hour'].between(10, 15)
+df_model['InvoiceDate'] = pd.to_datetime(df_model['InvoiceDate'])
+
+# Compute Recency
+latest_date = df_model['InvoiceDate'].max()
+df_model['RecencyDays'] = (latest_date - df_model['InvoiceDate']).dt.days
+
+# Remove guest users
+df_model = df_model[df_model['CustomerID'] != 'GUEST']
+
+
+# ### 8.2 Aggregate Features per Customer
+# 
+# Customer-level aggregation was performed to produce a single row per customer.
+# We applied logical aggregation strategies for each feature type:
+# 
+# - **Count-based**: `Frequency`, `UniqueProducts`
+# - **Ratio-based**: `DiversityRatio`, `AOV`
+# - **Max/mean**: `IsBulk`, `IsWeekend`, `AvgUnitPrice`
+# 
+# This structure enables fair comparison between customers and prepares the data for classification modeling.
+
+# In[37]:
+
+
+agg_df = df_model.groupby('CustomerID').agg({
+    'RecencyDays': 'min',
+    'InvoiceNo': 'nunique',
+    'TotalSales': 'sum',
+    'AvgUnitPrice': 'mean',
+    'IsBulk': 'max',
+    'IsWeekend': 'max',
+    'IsPeakHour': 'max',
+    'StockCode': 'nunique',
+    'Description': 'count'
+}).reset_index()
+
+# Rename columns
+agg_df.rename(columns={
+    'RecencyDays': 'Recency',
+    'InvoiceNo': 'Frequency',
+    'TotalSales': 'Monetary',
+    'StockCode': 'UniqueProducts',
+    'Description': 'TotalItems'
+}, inplace=True)
+
+# Create new feature: Diversity ratio (unique products per order)
+agg_df['DiversityRatio'] = agg_df['UniqueProducts'] / agg_df['Frequency']
+
+# Create AOV: Average Order Value
+agg_df['AOV'] = agg_df['Monetary'] / agg_df['Frequency']
+
+
+# ### 8.3 Define Target and Train Model
+# 
+# We defined **high-value customers** as those in the **top 25% of monetary value** and labeled them as Class 1.
+# 
+# The LightGBM classifier was trained with class imbalance adjustment using `scale_pos_weight`
+
+# In[38]:
+
+
+# Define X and y
+X_eng = agg_df.drop(columns=['CustomerID', 'Monetary', 'AOV'])
+y_eng = (agg_df['Monetary'] >= agg_df['Monetary'].quantile(0.75)).astype(int)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_eng, y_eng, test_size=0.3, random_state=42)
+
+# Compute class imbalance weight
+scale_ratio_eng = (y_train == 0).sum() / (y_train == 1).sum()
+
+# Train LightGBM
+lgbm_eng = LGBMClassifier(scale_pos_weight=scale_ratio_eng, random_state=42)
+lgbm_eng.fit(X_train, y_train)
+
+# Evaluate
+y_pred_eng = lgbm_eng.predict(X_test)
+print(classification_report(y_test, y_pred_eng))
+
+
+# The model demonstrates strong generalization, with a **recall of 0.84 for high-value customers**, meaning we correctly identified 84% of our top-spending customers. This is critical for targeted retention or loyalty programs.
+
+# ## 9. Outlier Clipping & SHAP Explainability
+# 
+# Before conducting SHAP-based model interpretation, we applied **IQR-based clipping** to limit the influence of extreme outliers that could distort the SHAP values.
+# 
+# This step improves:
+# 
+# - **Interpretability** (stable SHAP rankings)
+# - **Model robustness** (prevents overfitting to outliers)
+# - **Business trust** (stakeholders can relate to insights more clearly)
+# 
+# ### 9.1 IQR-Based Clipping
+# 
+# Applied to the following features:
+# 
+# - Recency, Frequency, Monetary
+# - AvgUnitPrice, UniqueProducts
+# - DiversityRatio, AOV
+# 
+# Each was clipped to the `[Q1 - 1.5*IQR, Q3 + 1.5*IQR]` range, ensuring that most observations stay untouched while extreme outliers are softened.
+
+# In[39]:
+
+
+def iqr_clipping(df, cols, k=1.5):
+    df_clipped = df.copy()
+    for col in cols:
+        Q1 = df[col].quantile(0.25)
+        Q3 = df[col].quantile(0.75)
+        IQR = Q3 - Q1
+        lower = Q1 - k * IQR
+        upper = Q3 + k * IQR
+        df_clipped[col] = df[col].clip(lower, upper)
+    return df_clipped
+
+# Apply to selected features
+clip_cols = ['Recency', 'Frequency', 'Monetary', 'AvgUnitPrice', 'UniqueProducts', 'DiversityRatio', 'AOV']
+agg_df_clipped = iqr_clipping(agg_df, cols=clip_cols)
+
+
+# ### 9.2 Re-train LightGBM with Clipped Features
+# 
+# After clipping, the model was retrained using the same structure and parameters.
+
+# In[40]:
+
+
+# Define new X and y
+X_clipped = agg_df_clipped.drop(columns=['CustomerID', 'Monetary', 'AOV'])  # remove target and derived
+y_clipped = (agg_df_clipped['Monetary'] >= agg_df_clipped['Monetary'].quantile(0.75)).astype(int)
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_clipped, y_clipped, test_size=0.3, random_state=42)
+
+# Compute scale_pos_weight
+scale_weight = (y_train == 0).sum() / (y_train == 1).sum()
+
+# Train new model
+lgbm_clip = LGBMClassifier(scale_pos_weight=scale_weight, random_state=42)
+lgbm_clip.fit(X_train, y_train)
+
+# Evaluate
+y_pred_clip = lgbm_clip.predict(X_test)
+print(classification_report(y_test, y_pred_clip))
+
+
+# There was a **slight decrease** in performance (~0.01–0.02), but this is acceptable as the benefit lies in improved **stability and explainability**.
+# The model is now better prepared for SHAP interpretation.
+
+# ### 9.3 SHAP Explainability
+# 
+# **SHAP (SHapley Additive exPlanations)** values provide a powerful way to interpret complex models like LightGBM by showing **how each feature contributes** to individual predictions.
+# 
+# >Our goal is to understand:
+# > - "Which features most influence the classification of high-value customers"
+# > - "Whether the model's decision logic aligns with business intuition"
+
+# In[41]:
+
+
+import lightgbm as lgb
+import shap
+
+# Create Dataset objects
+train_dataset = lgb.Dataset(X_train, label=y_train)
+test_dataset = lgb.Dataset(X_test, label=y_test, reference=train_dataset)
+
+params = {
+    "objective": "binary",
+    "scale_pos_weight": scale_weight,
+    "metric": "binary_logloss",
+    "verbose": -1,
+    "seed": 42
+}
+
+lgb_native_model = lgb.train(
+    params,
+    train_dataset,
+    num_boost_round=100,
+    valid_sets=[test_dataset]
+)
+
+explainer = shap.TreeExplainer(lgb_native_model)
+shap_values = explainer.shap_values(X_test)
+
+shap.summary_plot(shap_values, X_test)
+
+
+# Key insights from SHAP analysis:
+# 
+# - **TotalItems** and **Frequency** are the strongest drivers of high-value classification, suggesting that repeat purchase behavior and basket size are critical for customer value.
+# - **IsBulk** purchasing is a significant indicator, highlighting a subgroup of large-scale buyers.
+# - Lower **Recency** strongly contributes to high-value predictions, confirming that recent engagement is crucial.
+# - Features like **AvgUnitPrice**, **DiversityRatio**, and **UniqueProducts** reveal nuanced behavioral patterns that differentiate high-value customers beyond simple RFM measures.
+# - **Temporal behaviors** (IsWeekend, IsPeakHour) play a smaller but notable role, hinting at possible timing for targeted campaigns.
+# 
+# This insight will guide strategic recommendations for targeted marketing efforts and customer retention programs.
+# 
+
+# ### 9.4 Actionable Recommendation Table
+# 
+# | Segment/Behavior            | Insight from SHAP | Recommended Action |
+# |-----------------------------|-------------------|--------------------|
+# | **High TotalItems & High Frequency** | Indicates loyal, frequent buyers with large baskets. | - Loyalty program targeting.<br>- Exclusive previews of new products.<br>- Volume-based discounts. |
+# | **Bulk Buyers (IsBulk = 1)** | Customers purchasing large quantities at once. | - Special wholesale pricing.<br>- Personalized bulk offers.<br>- Supply chain priority handling. |
+# | **Low Recency (Recent buyers)** | Recent engagement strongly predicts high value. | - Upsell cross-sell campaigns soon after purchase.<br>- Post-purchase follow-up emails. |
+# | **High AvgUnitPrice** | Customers buying higher-priced items. | - Premium membership benefits.<br>- Early access to exclusive collections.<br>- Personalized recommendations for luxury goods. |
+# | **High DiversityRatio & UniqueProducts** | Customers exploring various product categories. | - Bundle promotions across categories.<br>- Personalized discovery emails featuring diverse products.<br>- Engagement via social media showcasing variety. |
+# | **Weekend & PeakHour shoppers** | Small but notable effect; timing-related buying patterns. | - Timed promotions during peak hours.<br>- Weekend flash sales.<br>- Targeted SMS or push notifications based on shopping time preference. |
+# 
+
+# ### 9.5 ROI Simulation
+# 
+# To translate our machine learning model's predictive power into business terms, we conducted a simple ROI simulation comparing:
+# 
+# - **Without Model Targeting:** Marketing to all customers indiscriminately
+# - **With Model Targeting:** Marketing only to customers predicted to be high-value by the model
+# 
+# This step bridges the gap between data science and business value, providing stakeholders with tangible financial insights.
+
+# In[42]:
+
+
+# Ground truth labels
+true_values = y_test.values
+
+# Model predictions
+pred_values = y_pred_clip
+
+# Monetary values for each customer
+monetary_values = agg_df_clipped.loc[
+    X_test.index, 'Monetary'
+].values
+
+# Assumptions for ROI simulation
+cost_per_customer = 2         # Marketing cost per customer (£)
+expected_uplift = 0.15        # Assumed revenue uplift due to campaign (+15%)
+
+# --- Scenario 1: No targeting (all customers receive marketing) ---
+
+# Total marketing cost
+total_cost_all = cost_per_customer * len(true_values)
+
+# Total revenue increase from all customers
+total_revenue_all = monetary_values.sum() * (1 + expected_uplift)
+
+# ROI calculation
+roi_all = (total_revenue_all - monetary_values.sum() - total_cost_all) / total_cost_all
+
+print(f"ROI without model targeting: {roi_all:.2f}")
+
+# --- Scenario 2: Targeting customers predicted as high-value ---
+
+# Identify customers predicted as high-value
+target_indices = np.where(pred_values == 1)[0]
+
+# Total marketing cost for targeted customers
+total_cost_model = cost_per_customer * len(target_indices)
+
+# Revenue from targeted customers with assumed uplift
+total_revenue_model = monetary_values[target_indices].sum() * (1 + expected_uplift)
+
+# ROI calculation
+roi_model = (total_revenue_model - monetary_values[target_indices].sum() - total_cost_model) / total_cost_model
+
+print(f"ROI with model targeting: {roi_model:.2f}")
+
+
+# - **ROI without model targeting:** ~87.68%
+# - **ROI with model targeting:** ~194.74%
+# 
+# This simulation shows that using the predictive model to target high-value customers could **more than double the return on investment** compared to blanket marketing. 
+# 
+# Such financial justification strongly supports integrating machine learning into marketing operations, demonstrating not only analytical rigor but also real-world business impact.
+# 
+
+# ## Summary of Insights
+# 
+# This e-commerce analytics project uncovered valuable insights into sales patterns and customer behavior across more than **541,000 transactions**, leading to practical business recommendations and predictive modeling results.
+# 
+# - **Sales Trends**
+#   - The highest monthly revenue came in **November 2011**, highlighting strong seasonal effects.
+#   - Sales tended to peak mid-week, especially on Tuesdays and Thursdays, suggesting the best timing for promotions.
+#   - High-value purchases were mostly made during business hours between 10 AM and 3 PM.
+# 
+# - **Data Cleaning & Standardization**
+#   - Resolved **220 product code inconsistencies**, ensuring more reliable product-level analysis.
+#   - Retained around 25% of transactions from guest customers, as these included many top-selling products crucial for revenue insights.
+# 
+# - **Customer Segmentation**
+#   - RFM and K-Means analysis identified clear high-value segments, characterized by:
+#     - High purchase frequency and spending spread across diverse products.
+#     - Low recency, indicating recent engagement and loyal customer behavior.
+# 
+# - **Predictive Modeling**
+#   - Developed a **LightGBM model** that achieved:
+#     - **Recall of 0.84** and an **F1-score of 0.81** for identifying high-value customers.
+#   - SHAP analysis confirmed key drivers such as:
+#     - **TotalItems**, **Frequency**, and **IsBulk**, all playing significant roles in predicting customer value.
+# 
+# - **Business Impact Simulation**
+#   - ROI simulations showed that targeting customers predicted as high-value could deliver an impressive **194.74% ROI**, more than doubling returns compared to untargeted campaigns (87.68%).
+# 
+# Overall, this project shows how turning data into insights can drive **real business decisions**, helping e-commerce companies **grow revenue, improve marketing ROI, and build stronger relationships with their customers.**
+# 
