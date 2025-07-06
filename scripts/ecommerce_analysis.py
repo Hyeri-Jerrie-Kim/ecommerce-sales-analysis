@@ -292,10 +292,12 @@ weekday_sales = (
     .reindex(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])  # logical order
     .reset_index()
 )
+# Define custom color palette (Set2)
+colors = sns.color_palette("Set2", len(weekday_sales))
 
 # Visualize
 plt.figure(figsize=(8, 5))
-sns.barplot(data=weekday_sales, x='DayOfWeek', y='TotalSales')
+sns.barplot(data=weekday_sales, x='DayOfWeek', y='TotalSales', palette=colors)
 plt.title('Total Sales by Day of Week')
 plt.ylabel('Total Sales (£)')
 plt.xlabel('Day of Week')
@@ -526,7 +528,7 @@ rfm['RFM_Score'] = rfm['R_score'].astype(str) + rfm['F_score'].astype(str) + rfm
 
 # #### 4.1.2 RFM Segment Mapping
 
-# In[24]:
+# In[20]:
 
 
 # Define RFM segment based on simple rules
@@ -580,7 +582,7 @@ rfm['Segment'] = rfm['Segment'].map(SEGMENT_NAME_MAP)
 
 # #### 4.1.3 RFM Segment Visualization
 
-# In[ ]:
+# In[21]:
 
 
 # Calculate average R, F, M per segment
@@ -632,7 +634,7 @@ plt.show()
 # 
 # K-Means is sensitive to feature scale, so all variables need to be standardized. We use `Recency`, `Frequency`, and `Monetary` values as input.
 
-# In[25]:
+# In[22]:
 
 
 from sklearn.preprocessing import StandardScaler
@@ -650,7 +652,7 @@ kmeans_scaled = scaler.fit_transform(kmeans_data)
 # 
 # We determine the ideal number of clusters (K) by evaluating how inertia (within-cluster sum of squares) changes with increasing K.
 
-# In[26]:
+# In[23]:
 
 
 from sklearn.cluster import KMeans
@@ -683,7 +685,7 @@ plt.show()
 # - Random seed: 42 for reproducibility
 # - Cluster labels were added back to the original customer-level data
 
-# In[27]:
+# In[24]:
 
 
 # Apply KMeans with K=4
@@ -702,7 +704,7 @@ kmeans_data_with_labels['Cluster'] = kmeans_labels
 # - This reveals how clusters differ in spending, purchase frequency, and recency.
 # - Visualization enables intuitive comparison and supports later business recommendations.
 
-# In[28]:
+# In[25]:
 
 
 # Aggregate mean RFM per cluster
@@ -738,7 +740,7 @@ plt.show()
 # - **Point Size:** Purchase Frequency
 # - **Color:** Assigned cluster label
 
-# In[29]:
+# In[26]:
 
 
 # Attach cluster labels to unscaled customer data
@@ -822,7 +824,7 @@ plt.show()
 # We define high-value customers as those in the top 25% of total spending (`Monetary`).  
 # This binary classification allows us to predict which customers are most likely to contribute significant revenue.
 
-# In[30]:
+# In[27]:
 
 
 # Define high-value customers (top 25%)
@@ -839,7 +841,7 @@ kmeans_data_with_labels['HighValueTarget'] = (kmeans_data_with_labels['Monetary'
 # 
 # These were selected based on previous EDA and segmentation insights.
 
-# In[31]:
+# In[28]:
 
 
 # Select features and target
@@ -852,7 +854,7 @@ target = kmeans_data_with_labels['HighValueTarget']
 # The dataset shows a 75:25 class imbalance.  
 # To compensate, we compute `scale_pos_weight = 3.0`, which adjusts the learning objective to give more weight to underrepresented class 1 (high-value customers).
 
-# In[32]:
+# In[29]:
 
 
 # Check imbalance ratio
@@ -864,7 +866,7 @@ print(f"Scale pos weight: {scale_ratio:.2f}")
 # 
 # We split the data into training and testing sets to evaluate model generalization.
 
-# In[33]:
+# In[30]:
 
 
 from sklearn.model_selection import train_test_split
@@ -879,7 +881,7 @@ X_train, X_test, y_train, y_test = train_test_split(
 # We use LightGBM with `scale_pos_weight` to handle class imbalance.  
 # This model is chosen for its speed, recall performance, and strong real-world application in classification problems.
 
-# In[34]:
+# In[31]:
 
 
 from lightgbm import LGBMClassifier
@@ -893,7 +895,7 @@ lgbm.fit(X_train, y_train)
 # We evaluate the model using precision, recall, and F1-score.  
 # Our primary goal is **high recall for class 1** (high-value customers), ensuring we do not miss key opportunities.
 
-# In[35]:
+# In[32]:
 
 
 from sklearn.metrics import classification_report
@@ -917,7 +919,7 @@ print(classification_report(y_test, y_pred))
 # 
 # These features were first derived at the **transaction level**, then aggregated per customer in the next step.
 
-# In[36]:
+# In[33]:
 
 
 df_model = df_fe.copy()
@@ -949,7 +951,7 @@ df_model = df_model[df_model['CustomerID'] != 'GUEST']
 # 
 # This structure enables fair comparison between customers and prepares the data for classification modeling.
 
-# In[37]:
+# In[34]:
 
 
 agg_df = df_model.groupby('CustomerID').agg({
@@ -986,7 +988,7 @@ agg_df['AOV'] = agg_df['Monetary'] / agg_df['Frequency']
 # 
 # The LightGBM classifier was trained with class imbalance adjustment using `scale_pos_weight`
 
-# In[38]:
+# In[35]:
 
 
 # Define X and y
@@ -1030,7 +1032,7 @@ print(classification_report(y_test, y_pred_eng))
 # 
 # Each was clipped to the `[Q1 - 1.5*IQR, Q3 + 1.5*IQR]` range, ensuring that most observations stay untouched while extreme outliers are softened.
 
-# In[39]:
+# In[36]:
 
 
 def iqr_clipping(df, cols, k=1.5):
@@ -1053,7 +1055,7 @@ agg_df_clipped = iqr_clipping(agg_df, cols=clip_cols)
 # 
 # After clipping, the model was retrained using the same structure and parameters.
 
-# In[40]:
+# In[37]:
 
 
 # Define new X and y
@@ -1086,7 +1088,7 @@ print(classification_report(y_test, y_pred_clip))
 # > - "Which features most influence the classification of high-value customers"
 # > - "Whether the model's decision logic aligns with business intuition"
 
-# In[41]:
+# In[38]:
 
 
 import lightgbm as lgb
@@ -1149,7 +1151,7 @@ shap.summary_plot(shap_values, X_test)
 # 
 # This step bridges the gap between data science and business value, providing stakeholders with tangible financial insights.
 
-# In[42]:
+# In[39]:
 
 
 # Ground truth labels
