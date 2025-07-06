@@ -48,7 +48,6 @@ ecommerce-analysis/
 ## 🗺️ Data Pipeline Overview
 
 To be inserted
-![Data Pipeline](images/data_pipeline.png)
 
 ---
 
@@ -75,17 +74,20 @@ Or run the Python script version:
 
 ### Revenue Trends
 
-![Monthly Revenue](images/monthly_revenue.png)
-
+![Monthly Revenue](images/3_monthly_sales_trend.png)
 - November saw the highest sales, confirming strong seasonal trends.
+
+![Daily Revenue](images/4_daily_sales_trend.png)
 - Weekday sales peaked on **Tuesdays and Thursdays**.
+
+![Hourly Revenue](images/5_hourly_sales_trend.png)
 - High-value purchases were mostly made between 10 AM and 3 PM.
 
 ---
 
 ### Customer Segmentation
 
-![RFM Segments](images/rfm_segments.png)
+![RFM Segments](images/8_rfm_metrics_by_segment.png)
 
 - RFM and K-Means revealed high-value customer groups characterized by:
   - Frequent purchases
@@ -96,7 +98,7 @@ Or run the Python script version:
 
 ### Predictive Modeling
 
-![SHAP Summary](images/shap_summary.png)
+![SHAP Summary](images/12_shap_summary.png)
 
 - LightGBM achieved:
   - **Recall → 0.84**
@@ -108,7 +110,7 @@ Or run the Python script version:
 
 ### Business Impact
 
-![ROI Simulation](images/roi_simulation.png)
+![ROI Simulation](images/13_roi_simulation.png)
 
 ROI simulations showed targeting high-value customers could increase ROI from **87.68%** to **194.74%**, proving the business value of predictive analytics.
 
