@@ -77,7 +77,7 @@ Or run the Python script version:
 ![Monthly Revenue](images/3_monthly_sales_trend.png)
 - November saw the highest sales, confirming strong seasonal trends.
 
-![Daily Revenue](images/.png)
+![Daily Revenue](images/4_daily_sales_trend.png)
 - Weekday sales peaked on **Tuesdays and Thursdays**.
 
 ![Hourly Revenue](images/5_hourly_sales_trend.png)
