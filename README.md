@@ -1,57 +1,58 @@
 # 🛒 E-commerce Sales Analysis
 
-## 🎯 Objective
+## 🏷 Overview 
 
-This project is an end-to-end data science case study analyzing over **541,000 transactions** from a UK-based e-commerce retailer. It explores customer behavior, cleans and standardizes messy retail data, segments customers, and builds machine learning pipelines to predict high-value customers.
+This project analyzes one year of online retail transactions to uncover sales patterns, customer behavior, and product performance. The goal is to turn raw transactional data into clear business insights that support strategic decision-making in the e-commerce domain.
 
-Beyond technical analytics, the project translates data insights directly into business strategies, enabling marketing teams to **target the right customers, improve ROI, and drive revenue growth**.
+**Data Range:** Dec 2010 – Dec 2011  •  **Countries:** 38  •  **Cleaned Records:** 397K
 
----
 
-## ⚡ Quick Project Highlights
+## 💼 Business Context
 
-- **Goal:** Identify high-value e-commerce customers and increase ROI
-- **Data:** 541,909 transactions from UK retailer
-- **Key Result:** LightGBM model achieved 84% recall for high-value customers
-- **Business Impact:** Targeted marketing could boost ROI from 87.68% to **194.74%**
+E-commerce companies often collect extensive sales data but struggle to interpret it effectively. This project addresses that gap by identifying what drives **sales growth, repeat purchases, and market concentration.** The findings provide a data-backed foundation for decisions related to marketing, inventory, and customer retention.
 
----
 
-## 📊 Dataset Overview
+## 🔍 Approach & Analysis
+Using the [Kaggle – Online Retail Dataset](https://www.kaggle.com/datasets/carrie1/ecommerce-data), the workflow included:
+- Data cleaning and validation (541,909 → 397,884 usable records).  
+- Time-based revenue analysis to identify seasonality.  
+- Product and regional segmentation to reveal profitability patterns.  
+- Customer grouping using RFM metrics to evaluate retention potential.  
+- Visual storytelling with Power BI for business presentation.
 
-- **📍 Source:** [Kaggle - Online Retail Dataset](https://www.kaggle.com/datasets/carrie1/ecommerce-data)
-- **📁 File:** `ecommerce_data.csv`
-- **🔢 Total Rows:** ~541,909 transactions  
-- **🕒 Period:** Dec 2010 - Dec 2011  
-- **💼 Domain Note:** Includes retail and wholesale transactions for unique all-occasion gifts.
 
-This publicly available dataset was originally provided by the UCI Machine Learning Repository. It captures real transaction records from a UK-based online retailer. This transparency ensures reproducibility and allows anyone to replicate this analysis end-to-end.
+## 💡 Key Insights
+- **Seasonal surge** — November and December revenue increased by 35%, confirming strong holiday-driven demand.  
+- **Regional concentration** — The UK generated ~82% of total revenue, highlighting geographic risk and expansion opportunities.  
+- **Top 5% customers** — Accounted for nearly half of all sales, underscoring the need for loyalty-focused marketing.  
+- **Product imbalance** — A small set of high-turnover items dominated revenue, suggesting SKU optimization potential.  
+- **Reorder behavior** — Frequent low-value invoices indicated B2B restocking customers rather than end consumers.  
 
----
 
-## 📂 Project Structure
-```
-ecommerce-analysis/
-├── datasets/
-│ └── ecommerce_data.csv
-├── notebooks/
-│ └── ecommerce_analysis.ipynb
-├── scripts/
-│ └── ecommerce_analysis.py
-├── images/
-│ └── *.png
-├── README.md
-└── requirements.txt
-```
----
+## 📈 Visual Highlights
+- `/images/monthly_sales_trend.png` — Seasonal revenue trend  
+- `/images/top_countries_revenue.png` — Regional contribution  
+- `/images/top_products.png` — Product performance  
+- `/images/customer_segments.png` — RFM-based segmentation 
 
-## 🗺️ Data Pipeline Overview
 
-To be inserted
+## 📊 Power BI Dashboard
+An interactive **Power BI dashboard** was developed to complement the Python-based analysis, allowing users to explore sales trends, customer behavior, and product performance dynamically.
 
----
+📂 **Files in `/powerbi/` folder**:
+- `ecommerce_dashboard.pbix` — Full interactive Power BI dashboard  
+- `ecommerce_dashboard.pdf` — Static exported version for quick preview
 
-## ⚙️ Installation & Usage
+### 🛠 How to Open
+1. Download **Power BI Desktop** ([Download here](https://powerbi.microsoft.com/en-us/downloads/)).
+2. Open the `.pbix` file to interact with the dashboard.
+
+
+## 🧰 Tools & Libraries
+Python | Pandas | Matplotlib | Seaborn | Power BI  
+
+
+## 🚀 How to Run
 Clone the repository and install dependencies:
    ```bash
    git clone https://github.com/Hyeri-Jerrie-Kim/ecommerce-sales-analysis.git
@@ -63,84 +64,9 @@ Run the notebook:
    ```bash
    jupyter notebook notebooks/ecommerce_analysis.ipynb
    ```
-Or run the Python script version:
-   ```sh
-   python scripts/ecommerce_analysis.py
-   ```
 
----
+## 🔗 Author & Links
 
-## ✅ Key Results & Visualizations
+Hyeri Kim — 📧 [Hyeri Kim](mailto:hyeri5524@gmail.com) | 🌐 [LinkedIn](https://linkedin.com/in/hyerikim-ds)
 
-### Revenue Trends
-
-![Monthly Revenue](images/3_monthly_sales_trend.png)
-- November saw the highest sales, confirming strong seasonal trends.
-
-![Daily Revenue](images/4_daily_sales_trend.png)
-- Weekday sales peaked on **Tuesdays and Thursdays**.
-
-![Hourly Revenue](images/5_hourly_sales_trend.png)
-- High-value purchases were mostly made between 10 AM and 3 PM.
-
----
-
-### Customer Segmentation
-
-![RFM Segments](images/8_rfm_metrics_by_segment.png)
-
-- RFM and K-Means revealed high-value customer groups characterized by:
-  - Frequent purchases
-  - Diverse product baskets
-  - Recent engagement
-
----
-
-### Predictive Modeling
-
-![SHAP Summary](images/12_shap_summary.png)
-
-- LightGBM achieved:
-  - **Recall → 0.84**
-  - **F1-score → 0.81**
-- SHAP analysis highlighted:
-  - `TotalItems`, `Frequency`, and `IsBulk` as top drivers of high-value classification.
-
----
-
-### Business Impact
-
-![ROI Simulation](images/13_roi_simulation.png)
-
-ROI simulations showed targeting high-value customers could increase ROI from **87.68%** to **194.74%**, proving the business value of predictive analytics.
-
----
-
-## 📊 Power BI Dashboard
-This project includes an interactive **Power BI dashboard** for analyzing e-commerce sales.
-
-📂 **Files in `/powerbi/` folder**:
-- **`ecommerce_dashboard.pbix`** → Full Power BI dashboard.
-- **`ecommerce_dashboard.pdf`** → Static version (exported PDF).
-
-### 🛠 How to Open
-1. Download **Power BI Desktop** ([Download Here](https://powerbi.microsoft.com/en-us/downloads/)).
-2. Open the `.pbix` file in Power BI.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues or submit pull requests for improvements, bug fixes, or new features.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License.  
-
----
-
-## 📬 Contact Me
-📧 [Hyeri Kim](mailto:hyeri5524@gmail.com) | 🌐 [LinkedIn](https://linkedin.com/in/hyerikim-ds)
 
