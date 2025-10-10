@@ -1,20 +1,44 @@
-# data
-data/processed/*
+# ============================================
+# 📂 Data files
+# ============================================
+data/
+!data/raw/               # keep raw dataset folder structure (optional)
+!data/README.md          # keep dataset description if exists
+*.csv
+*.xlsx
 *.zip
 *.parquet
 *.feather
 
-# jupyter
+# ============================================
+# 📓 Jupyter Notebooks
+# ============================================
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
 *.nbconvert.ipynb
+*.ipynb~                 # temporary autosave files
+*.ipynb.bak              # backup notebook files
 
-# python
+# ============================================
+# 🐍 Python / Environment
+# ============================================
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+*.log
+*.env
+.env/
+venv/
+.envrc
+*.egg-info/
+pip-wheel-metadata/
 
-# os/editor
+# ============================================
+# 🖥️ OS & Editor Config
+# ============================================
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
+*.swp
