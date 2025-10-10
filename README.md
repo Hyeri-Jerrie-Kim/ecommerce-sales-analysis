@@ -33,7 +33,7 @@ Using the [Kaggle – Online Retail Dataset](https://www.kaggle.com/datasets/car
 - `/images/monthly_sales_trend.png` — Seasonal revenue trend  
 - `/images/top_countries_revenue.png` — Regional contribution  
 - `/images/top_products.png` — Product performance  
-- `/images/customer_segments.png` — RFM-based segmentation 
+- `/images/customer_segments_pca.png` — RFM-based segmentation 
 
 
 ## 📊 Power BI Dashboard
