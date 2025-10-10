@@ -2,7 +2,7 @@
 # 📂 Data files
 # ============================================
 data/
-!data/raw/               # keep raw dataset folder structure (optional)
+!data/raw/               # keep raw dataset folder structure
 !data/README.md          # keep dataset description if exists
 *.csv
 *.xlsx
