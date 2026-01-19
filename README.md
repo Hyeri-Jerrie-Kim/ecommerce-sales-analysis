@@ -40,11 +40,11 @@ This project follows a standardized 3-phase analytical framework. All visuals ar
 ### **Phase 3: Behavioral Intelligence & ML Clustering**
 *Focus: Data preprocessing and K-Means segmentation for persona building.*
 
-| 08. RFM Raw Distribution | 09. Log Transformation | 10. K-Means Elbow Method |
-| :---: | :---: | :---: |
-| ![Raw Dist](./images/08_rfm_raw_distribution.png) | ![Log Trans](./images/09_rfm_log_transformation.png) | ![Elbow](./images/10_kmeans_elbow_method.png) |
-| **11. 3D RFM Clusters** | | |
-| ![3D Clusters](./images/11_interactive_3d_rfm_clusters.png) | | |
+| 08. RFM Raw Distribution | 09. Log Transformation |
+| :---: | :---: |
+| ![Raw Dist](./images/08_rfm_raw_distribution.png) | ![Log Trans](./images/09_rfm_log_transformation.png) |
+| **10. K-Means Elbow Method** | **11. 3D RFM Clusters** |
+| ![Elbow](./images/10_kmeans_elbow_method.png) | ![3D Clusters](./images/11_interactive_3d_rfm_clusters.png) |
 
 ---
 
