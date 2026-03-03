@@ -1,7 +1,8 @@
-# 🛒 E-commerce Sales Analysis
+# 🛒 E-Commerce Revenue Strategy Audit
+**Operational Audit & Behavioral Segmentation for Strategic Growth**
 
-## 🎯 Project Objective
-The goal of this project is to architect a **Strategic Decision-making Framework** for a UK-based online retailer. Moving beyond simple data cleaning, this analysis integrates temporal, geographic, and behavioral analytics to identify high-velocity operational windows and segment the customer base into actionable tiers to maximize $ROI$ and enhance **Revenue Recovery**.
+## 🎯 Strategic Objective
+The primary objective of this project is to architect a **Strategic Decision-making Framework** for a UK-based online retailer. By integrating temporal, geographic, and behavioral analytics, the study identifies high-velocity operational windows and segments the customer base into actionable tiers to maximize $ROI$ and enhance **Revenue Recovery**.
 
 **Data Scope:** Dec 2010 – Dec 2011 • **Cleaned Records:** 397K+ Transactions • **Market Reach:** 38 Countries
 
@@ -18,8 +19,27 @@ The goal of this project is to architect a **Strategic Decision-making Framework
 
 ---
 
-## 📊 Full Analytical Workflow (11-Step Audit)
-This project follows a standardized 3-phase analytical framework. All visuals are auto-exported via a custom Python pipeline for reproducibility.
+## 🛠 Integrated Analytical Framework (The 8-Step Flow)
+This project transforms raw transactional data into prescriptive strategies through a structured methodology.
+
+### **Phase 1: Operational Diagnostic Audit**
+1. **Temporal Trend Analysis**: Identified peak revenue cycles across monthly and seasonal dimensions.
+2. **The "Golden Window" Identification**: Pinpointed maximum sales velocity during **Mid-week** and **Mid-day**.
+3. **Geographic Performance Evaluation**: Assessed market dominance (UK) and international expansion potential.
+4. **Regional Concentration Analysis**: Quantified geographic revenue dependency to evaluate market risks.
+
+### **Phase 2: Portfolio Resilience & Concentration**
+5. **Product Velocity Analysis**: Classified top-performing products as core revenue drivers.
+6. **Revenue Concentration (Pareto Principle)**: Confirmed that the top **20.94%** of products generate **78.93%** of revenue.
+
+### **Phase 3: Behavioral Segmentation & Prescription**
+7. **Customer Behavioral Clustering**: Applied **K-Means Clustering** ($K=3$ ) on log-normalized **RFM** metrics.
+8. **Strategic Prescriptive Analytics**: Synthesized insights into targeted marketing roadmaps for VIP retention and churn recovery.
+
+---
+
+## 📊 Visual Analysis Audit (11 Strategic Assets)
+The above 8-step framework is visualized through **11 key assets**, auto-exported via a Python pipeline.
 
 ### **Phase 1: Operational Diagnostic Audit**
 *Focus: Identifying 'When' and 'Where' revenue velocity is highest.*
@@ -50,15 +70,15 @@ This project follows a standardized 3-phase analytical framework. All visuals ar
 
 ## 📊 Power BI Executive Dashboard
 A high-fidelity **Power BI Dashboard** complements the Python analysis, providing stakeholders with interactive access to the Star Schema-modeled data.
-* **Files**: `powerbi/ecommerce_dashboard.pbix` (Interactive), `ecommerce_dashboard.pdf` (Static Preview)
-* **Model**: Optimized for performance using a **Star Schema** (Fact_Sales, Dim_Customer, Dim_Product).
+* **Dashboard Title**: **Revenue Strategy Audit**
+* **Key Focus**: Executive KPIs, Golden Window Heatmap, and Interactive RFM Segmentation.
 
 ---
 
 ## 🧰 Tech Stack & Methodology
-* **Analytics**: Python (Pandas, Numpy), RFM Logic, Pareto Principle.
-* **Machine Learning**: Scikit-learn (K-Means Clustering, StandardScaler), Log Transformation for skewness mitigation.
-* **Visualization**: Seaborn, Matplotlib, **Plotly** (3D Interactivity), **Kaleido** (Static Export).
+- **Analytics**: RFM Analysis, Pareto/Concentration, Time-series Decomposition.
+- **Machine Learning**: Scikit-learn (K-Means Clustering, StandardScaler, Elbow Metrics).
+- **Processing & Visualization**: Python (Pandas, Numpy), Plotly 3D, Seaborn, Power BI.
 
 ---
 
