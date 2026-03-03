@@ -12,9 +12,9 @@ The goal of this project is to architect a **Strategic Decision-making Framework
 - **Pareto Concentration**: Validated that **20.94% of SKUs generate 78.93% of total revenue**, justifying a "Hero-first" inventory and promotion strategy.
 - **Geographic Risk**: 82% of revenue is centralized in the UK, highlighting a significant geographic dependency and the urgent need for expansion into emerging European markets.
 - **RFM Personas**: Segmented customers into 3 actionable tiers:
-    - **Champions (30.2%)**: High-value loyalists for retention.
-    - **At-Risk (31.3%)**: Former spenders requiring immediate **Win-back** efforts.
-    - **Hibernating (38.5%)**: Low-engagement tiers for automated re-activation.
+    - **Champions (17.7%)**: High-value loyalists for retention.
+    - **At-Risk (39.1%)**: Former spenders requiring immediate **Win-back** efforts.
+    - **Hibernating (43.2%)**: Low-engagement tiers for automated re-activation.
 
 ---
 
