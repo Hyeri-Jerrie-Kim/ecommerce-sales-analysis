@@ -68,10 +68,37 @@ The above 8-step framework is visualized through **11 key assets**, auto-exporte
 
 ---
 
-## 📊 Power BI Executive Dashboard
-A high-fidelity **Power BI Dashboard** complements the Python analysis, providing stakeholders with interactive access to the Star Schema-modeled data.
-* **Dashboard Title**: **Revenue Strategy Audit**
-* **Key Focus**: Executive KPIs, Golden Window Heatmap, and Interactive RFM Segmentation.
+## 📊 Operational Audit Dashboard
+
+_Designed to bridge the gap between high-level KPIs and daily operational execution._
+
+<p align="center">
+  <a href="powerbi/Revenue_Strategy_Audit_v1.0.png">
+    <img src="powerbi/Revenue_Strategy_Audit_v1.0.png" alt="Dashboard Preview" width="800">
+  </a>
+  <br>
+  <em>Click for high-resolution PNG view</em>
+</p>
+
+<p align="center">
+  <a href="powerbi/Revenue_Strategy_Audit_v1.0.pbix">
+    <img src="https://img.shields.io/badge/Download-PBIX%20File-yellow?style=for-the-badge&logo=powerbi&logoColor=white">
+  </a>
+  <a href="powerbi/Revenue_Strategy_Audit_v1.0.pdf">
+    <img src="https://img.shields.io/badge/Download-PDF%20Report-red?style=for-the-badge&logo=adobeacrobatreader&logoColor=white">
+  </a>
+</p>
+
+#### **Key Functional Modules:**
+- **Strategic Market Audit**: Visualized the **82% UK dependency** and identified the **Netherlands** as a high-value B2B hub **(AOV: £3,036)** versus scalable B2C growth corridors in **Germany/France**.
+- **Precision Churn Monitor**: Leveraged a data-backed **44-day recency threshold** to categorize the **39.1% At-Risk segment**, enabling targeted win-back automation.    
+- **Revenue Velocity Tracker**: Highlighted the **"Golden Window" (Tue-Thu, 10-15h)** to align marketing efforts with peak organic engagement.
+
+#### **Strategic Prescriptions (Actionable Insights)**
+The dashboard transcends simple reporting by providing a "Next Steps" framework for stakeholders:
+* **Retention Strategy**: Deploy personalized win-back offers for the **At-Risk** segment specifically within the **44-day window** to prevent permanent churn.
+* **Market Expansion**: Allocate **15% of the marketing budget** to high-AOV European B2B clusters to diversify geographic risk.
+* **Operational Efficiency**: Schedule weekly promotional pushes during the identified **Mid-week/Mid-day peak** to maximize organic engagement and ROI.
 
 ---
 
