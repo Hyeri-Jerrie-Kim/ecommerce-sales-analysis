@@ -5,7 +5,7 @@ data/
 !data/raw/               # keep raw dataset folder structure
 !data/README.md          # keep dataset description if exists
 *.csv
-*.xlsx
+# *.xlsx
 *.zip
 *.parquet
 *.feather
